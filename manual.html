@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caspio Approval Assistant — User Manual</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #1a1a2e;
+      background: #f5f6fa;
+    }
+
+    /* ===== Layout ===== */
+    .page-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== Sidebar / TOC ===== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100vh;
+      overflow-y: auto;
+      background: #1a1a2e;
+      color: #ccc;
+      padding: 24px 0;
+      z-index: 100;
+    }
+
+    .sidebar-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      padding: 0 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      margin-bottom: 12px;
+    }
+
+    .sidebar nav a {
+      display: block;
+      padding: 6px 24px;
+      font-size: 13.5px;
+      color: #aab;
+      text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      background: rgba(255,255,255,.07);
+      color: #fff;
+    }
+
+    .sidebar nav a.sub {
+      padding-left: 40px;
+      font-size: 12.5px;
+      color: #889;
+    }
+
+    .sidebar nav a.sub:hover { color: #ccd; }
+
+    /* ===== Main Content ===== */
+    .content {
+      margin-left: 280px;
+      max-width: 860px;
+      padding: 48px 56px 120px;
+    }
+
+    /* ===== Typography ===== */
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: #1a1a2e;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 56px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e0e0e0;
+      color: #1a1a2e;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 36px 0 12px;
+      color: #2c2c54;
+    }
+
+    p { margin-bottom: 16px; }
+
+    strong { font-weight: 600; }
+
+    a { color: #007bff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ===== Lists ===== */
+    ul, ol {
+      margin: 0 0 16px 24px;
+    }
+
+    li { margin-bottom: 6px; }
+
+    li ul, li ol { margin-top: 6px; }
+
+    /* ===== Code ===== */
+    code {
+      font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+      font-size: 14px;
+      background: #eef;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 20px 24px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* ===== Tables ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 14.5px;
+    }
+
+    th {
+      background: #1a1a2e;
+      color: #fff;
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 16px;
+    }
+
+    th:first-child { border-radius: 6px 0 0 0; }
+    th:last-child  { border-radius: 0 6px 0 0; }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    tr:nth-child(even) td { background: #f9f9fb; }
+
+    /* ===== Callouts ===== */
+    .callout {
+      border-left: 4px solid;
+      padding: 14px 20px;
+      margin: 16px 0 20px;
+      border-radius: 0 6px 6px 0;
+      font-size: 14.5px;
+    }
+
+    .callout-note {
+      border-color: #007bff;
+      background: #e8f0fe;
+    }
+
+    .callout-tip {
+      border-color: #28a745;
+      background: #e6f9ed;
+    }
+
+    .callout-warning {
+      border-color: #ffc107;
+      background: #fff8e1;
+    }
+
+    .callout-important {
+      border-color: #dc3545;
+      background: #fde8ea;
+    }
+
+    .callout-label {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* ===== Screenshot Placeholder ===== */
+    .screenshot {
+      display: block;
+      margin: 20px 0;
+      padding: 40px 24px;
+      background: #f0f0f5;
+      border: 2px dashed #c0c0d0;
+      border-radius: 8px;
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    .screenshot img {
+      max-width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    /* ===== Workflow Diagram ===== */
+    .diagram {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 28px 32px;
+      border-radius: 8px;
+      margin: 20px 0 24px;
+      font-family: "SF Mono", "Fira Code", Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* ===== Stage Cards ===== */
+    .stages {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 20px 0 28px;
+    }
+
+    .stage {
+      padding: 20px 24px;
+      border-left: 4px solid;
+      position: relative;
+    }
+
+    .stage:first-child { border-radius: 8px 8px 0 0; }
+    .stage:last-child  { border-radius: 0 0 8px 8px; }
+
+    .stage-1 { background: #e8f0fe; border-color: #1a73e8; }
+    .stage-2 { background: #e6f9ed; border-color: #28a745; }
+    .stage-3 { background: #fff3e0; border-color: #f59e0b; }
+
+    .stage-number {
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .stage-1 .stage-number { color: #1a73e8; }
+    .stage-2 .stage-number { color: #1b8a3a; }
+    .stage-3 .stage-number { color: #d97706; }
+
+    .stage-title {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .stage-desc {
+      font-size: 14.5px;
+      color: #444;
+    }
+
+    /* ===== Button Previews ===== */
+    .btn-preview {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      vertical-align: middle;
+    }
+
+    .btn-green  { background: #28a745; }
+    .btn-blue   { background: #007bff; }
+    .btn-red    { background: #dc3545; }
+    .btn-gray   { background: #6c757d; }
+
+    /* ===== FAQ ===== */
+    .faq-item {
+      margin-bottom: 24px;
+    }
+
+    .faq-q {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .faq-a {
+      color: #444;
+    }
+
+    /* ===== Troubleshooting ===== */
+    .ts-item {
+      margin-bottom: 28px;
+    }
+
+    .ts-item h3 {
+      margin-top: 0;
+      font-size: 17px;
+    }
+
+    .ts-cause, .ts-fix {
+      margin-bottom: 6px;
+    }
+
+    /* ===== Comparison Table ===== */
+    .compare-without { color: #999; }
+    .compare-with { color: #1a1a2e; font-weight: 600; }
+    .compare-auto { color: #28a745; font-style: italic; }
+
+    /* ===== Divider ===== */
+    hr {
+      border: none;
+      border-top: 1px solid #e0e0e0;
+      margin: 48px 0;
+    }
+
+    /* ===== Print ===== */
+    @media print {
+      .sidebar { display: none; }
+      .content { margin-left: 0; padding: 24px; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 960px) {
+      .sidebar { display: none; }
+      .content { margin-left: 0; padding: 32px 24px 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Caspio Approval Assistant<br>User Manual</div>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#installation">Installation</a>
+      <a href="#install-step1" class="sub">Step 1: Download</a>
+      <a href="#install-step2" class="sub">Step 2: Open Extensions Page</a>
+      <a href="#install-step3" class="sub">Step 3: Developer Mode</a>
+      <a href="#install-step4" class="sub">Step 4: Load Extension</a>
+      <a href="#install-step5" class="sub">Step 5: Verify</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#usage-guide">Usage Guide</a>
+      <a href="#usage-start" class="sub">Starting a Review Session</a>
+      <a href="#usage-decide" class="sub">Making Approval Decisions</a>
+      <a href="#usage-skip" class="sub">Skipping a Vendor</a>
+      <a href="#usage-stop" class="sub">Stopping a Session</a>
+      <a href="#usage-complete" class="sub">Completing All Reviews</a>
+      <a href="#approval-options">Approval Options</a>
+      <a href="#toolbar-reference">Toolbar Buttons Reference</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </aside>
+
+  <!-- ===== Main Content ===== -->
+  <main class="content">
+
+    <h1>Caspio Approval Assistant</h1>
+    <p class="subtitle">
+      A Chrome extension that streamlines the Caspio approval workflow. Instead of manually switching between external vendor pages and Caspio to submit each approval, this extension lets you review vendors in a continuous flow &mdash; make your decision on the vendor's page, and the extension handles the rest automatically in the background.
+    </p>
+
+    <!-- ========== OVERVIEW ========== -->
+    <h2 id="overview">Overview</h2>
+
+    <p>When working in Caspio, you often need to:</p>
+    <ol>
+      <li>Click a vendor link (e.g., an Amazon seller page) to review their information</li>
+      <li>Go back to Caspio</li>
+      <li>Click <strong>Edit</strong> on that row</li>
+      <li>Select an approval status from the dropdown</li>
+      <li>Click <strong>Update</strong></li>
+      <li>Repeat for the next vendor</li>
+    </ol>
+
+    <p><strong>This extension automates steps 2&ndash;5 entirely.</strong> You simply click through vendor pages and make your decisions &mdash; the extension queues up all the Caspio operations and executes them in the background.</p>
+
+    <h3>Before vs. After</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Without Extension</th>
+          <th>With Extension</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Open vendor page</td>
+          <td class="compare-with">Open vendor page</td>
+        </tr>
+        <tr>
+          <td>Review vendor</td>
+          <td class="compare-with">Review vendor</td>
+        </tr>
+        <tr>
+          <td>Switch back to Caspio</td>
+          <td class="compare-with">Click approval button on the toolbar</td>
+        </tr>
+        <tr>
+          <td>Click Edit</td>
+          <td class="compare-auto">(automatically navigates to next vendor)</td>
+        </tr>
+        <tr>
+          <td>Select approval value</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Click Update</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Click next vendor link</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ========== INSTALLATION ========== -->
+    <h2 id="installation">Installation</h2>
+
+    <h3 id="install-step1">Step 1: Download the Extension</h3>
+    <p>Download or clone the extension folder to your computer. The folder should contain the following files:</p>
+    <pre><code>Caspio/
+├── manifest.json
+├── background.js
+├── caspio-content.js
+├── target-content.js
+├── overlay.css
+└── icons/
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png</code></pre>
+
+    <div class="callout callout-note">
+      <div class="callout-label">Note</div>
+      Remember the location of this folder &mdash; you will need it in Step 4.
+    </div>
+
+    <h3 id="install-step2">Step 2: Open Chrome Extensions Page</h3>
+    <p>Open Google Chrome and navigate to the extensions management page by either:</p>
+    <ul>
+      <li>Typing <code>chrome://extensions</code> in the address bar and pressing <strong>Enter</strong>, or</li>
+      <li>Clicking the three-dot menu (<strong>&#8942;</strong>) &rarr; <strong>Extensions</strong> &rarr; <strong>Manage Extensions</strong></li>
+    </ul>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/chrome-extensions-page.png" alt="Chrome extensions page"> -->
+      Screenshot: Chrome extensions page
+    </div>
+
+    <h3 id="install-step3">Step 3: Enable Developer Mode</h3>
+    <p>In the top-right corner of the extensions page, toggle the <strong>Developer mode</strong> switch to the <strong>ON</strong> position.</p>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/developer-mode-toggle.png" alt="Developer mode toggle"> -->
+      Screenshot: Developer mode toggle highlighted
+    </div>
+
+    <h3 id="install-step4">Step 4: Load the Extension</h3>
+    <ol>
+      <li>Click the <strong>Load unpacked</strong> button that appears in the top-left area after enabling Developer mode.</li>
+      <li>In the file browser dialog, navigate to and select the <strong>Caspio</strong> folder (the one containing <code>manifest.json</code>).</li>
+      <li>Click <strong>Select Folder</strong>.</li>
+    </ol>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/load-unpacked-button.png" alt="Load unpacked button"> -->
+      Screenshot: Load unpacked button highlighted
+    </div>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/folder-selection.png" alt="Folder selection dialog"> -->
+      Screenshot: Folder selection dialog
+    </div>
+
+    <h3 id="install-step5">Step 5: Verify Installation</h3>
+    <p>After loading, the extension should appear in your extensions list with the name <strong>Caspio Approval Assistant</strong>. Verify that:</p>
+    <ul>
+      <li>The extension is shown as enabled (toggle is blue/on)</li>
+      <li>No error messages are displayed</li>
+    </ul>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/extension-loaded.png" alt="Extension loaded successfully"> -->
+      Screenshot: Extension loaded successfully in the list
+    </div>
+
+    <div class="callout callout-tip">
+      <div class="callout-label">Tip</div>
+      You can pin the extension to your Chrome toolbar by clicking the puzzle icon (<strong>Extensions</strong>) in the toolbar and clicking the pin icon next to <strong>Caspio Approval Assistant</strong>.
+    </div>
+
+    <hr>
+
+    <!-- ========== HOW IT WORKS ========== -->
+    <h2 id="how-it-works">How It Works</h2>
+
+    <p>The extension operates in three stages:</p>
+
+    <div class="stages">
+      <div class="stage stage-1">
+        <div class="stage-number">Stage 1</div>
+        <div class="stage-title">Queue Building</div>
+        <div class="stage-desc">When you click a vendor link on the Caspio page, the extension scans <strong>all rows</strong> in the table and builds a review queue starting from the row you clicked.</div>
+      </div>
+      <div class="stage stage-2">
+        <div class="stage-number">Stage 2</div>
+        <div class="stage-title">Vendor Review</div>
+        <div class="stage-desc">On each vendor page, a toolbar appears at the top with approval buttons and a progress indicator (e.g., <em>Review 3 / 15</em>). After you click a button, the tab navigates directly to the next vendor &mdash; no need to return to Caspio.</div>
+      </div>
+      <div class="stage stage-3">
+        <div class="stage-number">Stage 3</div>
+        <div class="stage-title">Background Automation</div>
+        <div class="stage-desc">Meanwhile, the Caspio tab (in the background) automatically processes your decisions one by one: <strong>Edit &rarr; Select value &rarr; Update</strong>. The page refreshes after each Update, and the next operation begins automatically.</div>
+      </div>
+    </div>
+
+    <p>The key advantage is that <strong>Stage 2 and Stage 3 run in parallel</strong> &mdash; you continue reviewing vendors while Caspio processes your previous decisions in the background.</p>
+
+    <div class="diagram">Caspio Tab (background)              Vendor Tab (user is here)
+━━━━━━━━━━━━━━━━━━━━━━━━              ━━━━━━━━━━━━━━━━━━━━━━━━
+User clicks vendor link  ──────────→  Page 1: "Review 1 / 15"
+Scans all rows, builds queue          User selects: Approved ──┐
+                                                               │
+Edit row 1 → Select → Update  ←───  ←─┘
+(page refreshes)                      Page 2: "Review 2 / 15"
+                                      User selects: Declined ──┐
+Edit row 2 → Select → Update  ←───  ←─┘
+(page refreshes)                      Page 3: "Review 3 / 15"
+                                          ...
+Edit row N → Select → Update         Last page → tab closes
+(done)                                ← Back to Caspio tab</div>
+
+    <hr>
+
+    <!-- ========== USAGE GUIDE ========== -->
+    <h2 id="usage-guide">Usage Guide</h2>
+
+    <h3 id="usage-start">Starting a Review Session</h3>
+    <ol>
+      <li>Open your Caspio data page in Chrome (e.g., <code>https://c1abz485.caspio.com/dp/...</code>).</li>
+      <li>Click on <strong>any external vendor link</strong> in the table (e.g., an Amazon seller link).</li>
+      <li>A new tab opens with the vendor's page. The extension automatically:
+        <ul>
+          <li>Scans all rows in the Caspio table</li>
+          <li>Builds a review queue starting from the row you clicked</li>
+          <li>Displays the <strong>approval toolbar</strong> at the top of the vendor page</li>
+        </ul>
+      </li>
+    </ol>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/caspio-page-with-links.png" alt="Caspio page with vendor links"> -->
+      Screenshot: Caspio page with vendor links visible, one highlighted
+    </div>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/vendor-page-with-toolbar.png" alt="Vendor page with approval toolbar"> -->
+      Screenshot: Vendor page with the approval toolbar visible at top
+    </div>
+
+    <h3 id="usage-decide">Making Approval Decisions</h3>
+    <p>Once the approval toolbar appears at the top of the vendor page:</p>
+    <ol>
+      <li>Review the vendor's information on the page.</li>
+      <li>Click one of the three approval buttons:
+        <ul>
+          <li><span class="btn-preview btn-green">Approved without KAM</span></li>
+          <li><span class="btn-preview btn-blue">Approved with KAM</span></li>
+          <li><span class="btn-preview btn-red">Declined</span></li>
+        </ul>
+      </li>
+      <li>The page will automatically navigate to the <strong>next vendor</strong> in the queue.</li>
+      <li>The toolbar updates to show your current progress (e.g., <em>Review 3 / 15</em>).</li>
+    </ol>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/toolbar-buttons-closeup.png" alt="Toolbar close-up"> -->
+      Screenshot: Toolbar close-up showing the three buttons and progress
+    </div>
+
+    <div class="callout callout-note">
+      <div class="callout-label">What happens in the background</div>
+      After each decision, the extension sends your choice to the Caspio tab. The Caspio tab automatically clicks Edit, selects your chosen value in the dropdown, and clicks Update &mdash; all without any action from you.
+    </div>
+
+    <h3 id="usage-skip">Skipping a Vendor</h3>
+    <p>If you want to skip a vendor without making a decision:</p>
+    <ol>
+      <li>Click the <span class="btn-preview btn-gray">Skip</span> button on the toolbar.</li>
+      <li>The page navigates to the next vendor immediately.</li>
+      <li>No approval action is submitted to Caspio for the skipped vendor.</li>
+    </ol>
+
+    <div class="callout callout-note">
+      <div class="callout-label">Note</div>
+      Skipped vendors are not processed. If you need to review them later, you will need to do so manually on the Caspio page.
+    </div>
+
+    <h3 id="usage-stop">Stopping a Review Session</h3>
+    <p>To end the review session before all vendors have been reviewed:</p>
+    <ol>
+      <li>Click the <span class="btn-preview btn-gray">Stop</span> button on the toolbar.</li>
+      <li>The toolbar disappears and the current page remains open.</li>
+      <li>Any decisions you already made will <strong>continue to be processed</strong> in the background on the Caspio tab.</li>
+    </ol>
+
+    <div class="callout callout-important">
+      <div class="callout-label">Important</div>
+      Stopping only ends the review flow &mdash; it does not cancel decisions you have already submitted. Those will still be applied to Caspio.
+    </div>
+
+    <h3 id="usage-complete">Completing All Reviews</h3>
+    <p>When you reach the last vendor in the queue and make your decision:</p>
+    <ol>
+      <li>The vendor tab closes automatically.</li>
+      <li>Chrome switches back to the Caspio tab.</li>
+      <li>The Caspio tab finishes processing any remaining operations in the background.</li>
+    </ol>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/reviews-completed.png" alt="All reviews completed"> -->
+      Screenshot: All reviews completed, back on Caspio page
+    </div>
+
+    <hr>
+
+    <!-- ========== APPROVAL OPTIONS ========== -->
+    <h2 id="approval-options">Approval Options</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Button Color</th>
+          <th>Value Set in Caspio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Approved without KAM</td>
+          <td><span class="btn-preview btn-green">Green</span></td>
+          <td><code>Approved without KAM</code></td>
+        </tr>
+        <tr>
+          <td>Approved with KAM</td>
+          <td><span class="btn-preview btn-blue">Blue</span></td>
+          <td><code>Approved with KAM</code></td>
+        </tr>
+        <tr>
+          <td>Declined</td>
+          <td><span class="btn-preview btn-red">Red</span></td>
+          <td><code>Declined</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>These values correspond exactly to the options in the <strong>CatmanApproval</strong> dropdown field in Caspio's inline edit form.</p>
+
+    <hr>
+
+    <!-- ========== TOOLBAR REFERENCE ========== -->
+    <h2 id="toolbar-reference">Toolbar Buttons Reference</h2>
+
+    <p>The approval toolbar appears at the top of each vendor page during an active review session.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Button</th>
+          <th>Preview</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Approved without KAM</strong></td>
+          <td><span class="btn-preview btn-green">Approved without KAM</span></td>
+          <td>Submit approval and go to next vendor</td>
+        </tr>
+        <tr>
+          <td><strong>Approved with KAM</strong></td>
+          <td><span class="btn-preview btn-blue">Approved with KAM</span></td>
+          <td>Submit approval and go to next vendor</td>
+        </tr>
+        <tr>
+          <td><strong>Declined</strong></td>
+          <td><span class="btn-preview btn-red">Declined</span></td>
+          <td>Submit decline and go to next vendor</td>
+        </tr>
+        <tr>
+          <td><strong>Skip</strong></td>
+          <td><span class="btn-preview btn-gray">Skip</span></td>
+          <td>Skip this vendor (no action) and go to next</td>
+        </tr>
+        <tr>
+          <td><strong>Stop</strong></td>
+          <td><span class="btn-preview btn-gray">Stop</span></td>
+          <td>End review session; submitted decisions continue processing</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="screenshot">
+      <!-- Replace with: <img src="screenshots/toolbar-annotated.png" alt="Annotated toolbar"> -->
+      Screenshot: Annotated toolbar with each button labeled
+    </div>
+
+    <hr>
+
+    <!-- ========== TROUBLESHOOTING ========== -->
+    <h2 id="troubleshooting">Troubleshooting</h2>
+
+    <div class="ts-item">
+      <h3>The toolbar does not appear on the vendor page</h3>
+      <p class="ts-cause"><strong>Cause:</strong> The extension may not be loaded or enabled.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Go to <code>chrome://extensions</code> and verify the extension is enabled (toggle is on). If it shows errors, click <strong>Reload</strong> (circular arrow icon).</p>
+      <div class="screenshot">
+        <!-- Replace with: <img src="screenshots/extension-reload.png" alt="Reload button"> -->
+        Screenshot: Reload button on the extension card
+      </div>
+    </div>
+
+    <div class="ts-item">
+      <h3>The toolbar appears but nothing happens when I click a button</h3>
+      <p class="ts-cause"><strong>Cause:</strong> The Caspio tab may have been closed.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Make sure the Caspio data page is still open in another tab. The extension needs it to submit approvals.</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>Caspio shows "Invalid entry in one or more fields"</h3>
+      <p class="ts-cause"><strong>Cause:</strong> The dropdown values may have changed in Caspio.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Manually click Edit on any row in Caspio, open the CatmanApproval dropdown, and check that the option values match: <code>Approved without KAM</code>, <code>Approved with KAM</code>, <code>Declined</code>. If they have changed, the extension code needs to be updated.</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>The extension does not pick up all rows</h3>
+      <p class="ts-cause"><strong>Cause:</strong> Only rows visible on the current Caspio page are scanned.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Make sure your Caspio page is configured to display all rows (the <code>cbCurrentPageSize</code> parameter should be set high enough, e.g., <code>999</code>).</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>I need to re-review a vendor I skipped</h3>
+      <p class="ts-fix"><strong>Solution:</strong> Skipped vendors are not tracked. Go back to the Caspio page and manually process the skipped row using the standard Edit &rarr; Select &rarr; Update workflow.</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>The extension stopped working after a Chrome update</h3>
+      <p class="ts-fix"><strong>Fix:</strong> Go to <code>chrome://extensions</code>, find <strong>Caspio Approval Assistant</strong>, and click <strong>Reload</strong>. If that does not work, remove the extension and load it again using the <a href="#installation">installation steps</a> above.</p>
+    </div>
+
+    <hr>
+
+    <!-- ========== FAQ ========== -->
+    <h2 id="faq">FAQ</h2>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: Does the extension modify any data on external vendor pages (e.g., Amazon)?</p>
+      <p class="faq-a">A: No. The extension only adds a visual toolbar overlay to the top of the page. It does not interact with or modify the vendor page content in any way.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: Can I use other tabs while a review session is running?</p>
+      <p class="faq-a">A: Yes. The review session only uses two tabs &mdash; the Caspio tab (background) and the vendor review tab. You can freely use other tabs.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: What happens if I close the Caspio tab during a review session?</p>
+      <p class="faq-a">A: The review toolbar will still appear on vendor pages, but approval decisions cannot be submitted because the Caspio tab is no longer available. You should keep the Caspio tab open during the entire review session.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: What happens if I close the vendor tab during a review session?</p>
+      <p class="faq-a">A: The review session ends. Any decisions already submitted will continue to be processed on the Caspio tab. To resume, go back to the Caspio page and click another vendor link.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: Can I run multiple review sessions at the same time?</p>
+      <p class="faq-a">A: No. Only one review session can be active at a time. Starting a new session (by clicking a vendor link on Caspio) will replace the current queue.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: Does this extension send any data to external servers?</p>
+      <p class="faq-a">A: No. All data stays within your browser. The extension only communicates between your open tabs using Chrome's built-in messaging API (<code>chrome.storage.local</code> and <code>chrome.runtime.sendMessage</code>). No network requests are made by the extension.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: Does the extension work with other Caspio applications?</p>
+      <p class="faq-a">A: The extension is designed for Caspio data pages on <code>*.caspio.com</code> domains that use the standard inline edit interface with the <code>CatmanApproval</code> dropdown field. It may not work with custom Caspio forms or different field names.</p>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

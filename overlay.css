@@ -1,0 +1,120 @@
+/**
+ * 审批浮层样式
+ *
+ * 在目标页面（如 Amazon 商家页面）顶部显示固定的审批选项栏。
+ * 使用 fixed 定位 + 超高 z-index 确保浮层始终显示在页面最上层，
+ * 不受目标网站自身布局和样式的影响。
+ *
+ * 所有样式都使用 #caspio-approval-overlay 前缀以避免与目标页面样式冲突。
+ */
+
+/* 浮层容器 —— 固定在页面顶部的横幅 */
+#caspio-approval-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483647; /* 最大 z-index 值，确保在任何页面元素之上 */
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #ffffff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+/* 提示文字 */
+#caspio-approval-overlay .cao-label {
+  font-weight: 600;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+/* 按钮组容器 */
+#caspio-approval-overlay .cao-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* 通用按钮基础样式 */
+#caspio-approval-overlay .cao-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+#caspio-approval-overlay .cao-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#caspio-approval-overlay .cao-btn:active {
+  transform: translateY(0);
+}
+
+/* "Approved without KAM" 按钮 —— 绿色，表示无条件通过 */
+#caspio-approval-overlay .cao-btn-approve {
+  background-color: #28a745;
+  color: #ffffff;
+}
+
+#caspio-approval-overlay .cao-btn-approve:hover {
+  background-color: #218838;
+}
+
+/* "Approved with KAM" 按钮 —— 蓝色，表示有条件通过 */
+#caspio-approval-overlay .cao-btn-approve-kam {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+#caspio-approval-overlay .cao-btn-approve-kam:hover {
+  background-color: #0069d9;
+}
+
+/* "Declined" 按钮 —— 红色，表示拒绝 */
+#caspio-approval-overlay .cao-btn-decline {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+#caspio-approval-overlay .cao-btn-decline:hover {
+  background-color: #c82333;
+}
+
+/* 关闭/取消按钮 —— 半透明，不突出 */
+#caspio-approval-overlay .cao-btn-cancel {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #cccccc;
+  margin-left: 8px;
+}
+
+#caspio-approval-overlay .cao-btn-cancel:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* 处理中状态的文字 */
+#caspio-approval-overlay .cao-processing {
+  color: #a0d2ff;
+  font-weight: 600;
+}
+
+/**
+ * 为页面顶部留出浮层的空间，避免浮层遮挡页面原有内容。
+ * 通过给 body 添加 padding-top 来实现。
+ */
+body.caspio-approval-active {
+  padding-top: 56px !important;
+}
