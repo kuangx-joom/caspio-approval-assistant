@@ -165,10 +165,9 @@ The key advantage is that **Stage 2 and Stage 3 run in parallel** — you contin
 Once the approval toolbar appears at the top of the vendor page:
 
 1. Review the vendor's information on the page.
-2. Click one of the three approval buttons:
-   - **Approved without KAM** (green button)
-   - **Approved with KAM** (blue button)
-   - **Declined** (red button)
+2. Click one of the approval buttons. The available buttons depend on which DataPage you started from (see [Approval Options](#approval-options)):
+   - **Catman Approval** page: **Approved without KAM** (green) · **Approved with KAM** (blue) · **Declined** (red)
+   - **Initial Application Sorting** page: **OK (approved)** (green) · **Declined** (red)
 3. The page will automatically navigate to the **next vendor** in the queue.
 4. The toolbar updates to show your current progress (e.g., `Review 3 / 15`).
 
@@ -212,6 +211,12 @@ When you reach the last vendor in the queue and make your decision:
 
 ## Approval Options
 
+The approval buttons shown on the toolbar depend on which Caspio DataPage you started the review from. The extension currently supports two DataPages.
+
+### DataPage 1 — Catman Approval
+
+Started from `/dp/111d6000ed43124f32b24bd99611`. Shows three options:
+
 | Option | Button Color | Dropdown Value Set in Caspio |
 |---|---|---|
 | Approved without KAM | Green | `Approved without KAM` |
@@ -220,16 +225,28 @@ When you reach the last vendor in the queue and make your decision:
 
 These values correspond exactly to the options in the **CatmanApproval** dropdown field in Caspio's inline edit form.
 
+### DataPage 2 — Initial Application Sorting
+
+Started from `/dp/111d6000f90d0b783d8f420784b1`. This page only displays applications whose **Target Market** field is empty, so every record needs a decision. Shows two options:
+
+| Option | Button Color | Dropdown Value Set in Caspio |
+|---|---|---|
+| OK (approved) | Green | `OK (approved)` |
+| Declined | Red | `Declined` |
+
+These values correspond exactly to the options in the **Target Market** dropdown field in Caspio's inline edit form.
+
 ---
 
 ## Toolbar Buttons Reference
 
-The approval toolbar appears at the top of each vendor page during an active review session.
+The approval toolbar appears at the top of each vendor page during an active review session. The approval buttons vary by DataPage (see [Approval Options](#approval-options)); the **Skip** and **Stop** buttons are always present.
 
 | Button | Color | Action |
 |---|---|---|
-| **Approved without KAM** | Green | Submit "Approved without KAM" and go to next vendor |
-| **Approved with KAM** | Blue | Submit "Approved with KAM" and go to next vendor |
+| **Approved without KAM** | Green | *(Catman Approval page)* Submit "Approved without KAM" and go to next vendor |
+| **Approved with KAM** | Blue | *(Catman Approval page)* Submit "Approved with KAM" and go to next vendor |
+| **OK (approved)** | Green | *(Initial Application Sorting page)* Submit "OK (approved)" and go to next vendor |
 | **Declined** | Red | Submit "Declined" and go to next vendor |
 | **Skip** | Gray | Skip this vendor (no action taken) and go to next vendor |
 | **Stop** | Gray | End the review session; already-submitted decisions continue processing |
@@ -295,4 +312,4 @@ A: No. Only one review session can be active at a time. Starting a new session (
 A: No. All data stays within your browser. The extension only communicates between your open tabs using Chrome's built-in messaging API (`chrome.storage.local` and `chrome.runtime.sendMessage`). No network requests are made by the extension.
 
 **Q: Does the extension work with other Caspio applications?**
-A: The extension is designed for Caspio data pages on `*.caspio.com` domains that use the standard inline edit interface with the `CatmanApproval` dropdown field. It may not work with custom Caspio forms or different field names.
+A: The extension is configured for two specific Caspio DataPages — **Catman Approval** (`/dp/111d6000ed43124f32b24bd99611`, using the `CatmanApproval` field) and **Initial Application Sorting** (`/dp/111d6000f90d0b783d8f420784b1`, using the `Target Market` field). Other Caspio pages fall back to the Catman Approval behavior by default. To support a new DataPage with different options or field names, add an entry to `DATAPAGE_CONFIGS` in `caspio-content.js`.

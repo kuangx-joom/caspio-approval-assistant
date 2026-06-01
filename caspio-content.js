@@ -23,6 +23,81 @@
 (function () {
   "use strict";
 
+  /* ====== 多 DataPage 配置 ====== */
+
+  /**
+   * 不同 Caspio DataPage 的审批配置表。
+   *
+   * 背景：本扩展需要服务于多个 Caspio DataPage，而不同 DataPage 的
+   * 审批字段名（Caspio 内联编辑 <select> 的 name）和可选审批值各不相同。
+   * 为避免把逻辑写死，统一用 DataPage 的部署 ID（URL 中 /dp/<id> 的 <id>）作为键，
+   * 将每个页面的差异集中在此处维护。
+   *
+   * 各字段含义：
+   * - inlineEditField: 该页面内联编辑表单中审批下拉框 <select> 的 name 属性。
+   *   executeApproval 会用它来定位下拉框并写入审批值。
+   * - options: 在目标（外部）页面顶部浮层中展示的审批按钮列表。
+   *   每个按钮的 value 必须与 Caspio 下拉框中对应选项的文本完全一致，
+   *   因为 selectCaspioDropdownValue 是按文本/ title 匹配选项的。
+   *   className 复用 overlay.css 中已定义的样式类（绿色 / 蓝色 / 红色）。
+   *
+   * 注意：这里同时存放 options 是为了让目标页面脚本（target-content.js）能拿到。
+   * 由于目标页面位于外部网站、无法读取 Caspio 的 URL，构建任务队列时会把
+   * 对应配置写入 taskQueue.config，再通过 background 的 isTargetTab 回传给目标页面。
+   */
+  const DATAPAGE_CONFIGS = {
+    /* 页面一：Catman 审批页（保持原有逻辑：三个审批选项） */
+    "111d6000ed43124f32b24bd99611": {
+      inlineEditField: "InlineEditCatmanApproval",
+      options: [
+        { text: "Approved without KAM", value: "Approved without KAM", className: "cao-btn cao-btn-approve" },
+        { text: "Approved with KAM",    value: "Approved with KAM",    className: "cao-btn cao-btn-approve-kam" },
+        { text: "Declined",             value: "Declined",             className: "cao-btn cao-btn-decline" }
+      ]
+    },
+    /* 页面二：Initial application sorting（Target Market 审批）。
+     * 该页面在 Caspio 端已按服务器规则只展示 Target Market 为空的记录，
+     * 因此无需在前端再做行过滤；用户对每条记录只需在
+     * OK (approved) 与 Declined 之间二选一，写入 InlineEditTargetMarket 字段。 */
+    "111d6000f90d0b783d8f420784b1": {
+      inlineEditField: "InlineEditTargetMarket",
+      options: [
+        { text: "OK (approved)", value: "OK (approved)", className: "cao-btn cao-btn-approve" },
+        { text: "Declined",      value: "Declined",      className: "cao-btn cao-btn-decline" }
+      ]
+    }
+  };
+
+  /**
+   * 默认配置：当访问的 DataPage 未在 DATAPAGE_CONFIGS 中登记时，
+   * 回退到页面一（Catman 审批）的配置，以保持向后兼容的原有行为。
+   */
+  const DEFAULT_CONFIG = DATAPAGE_CONFIGS["111d6000ed43124f32b24bd99611"];
+
+  /**
+   * 从当前页面 URL 中解析 Caspio DataPage 的部署 ID。
+   *
+   * Caspio 部署页面的路径形如 /dp/<id>，其中 <id> 为十六进制字符串。
+   * 解析失败（理论上不应发生）时返回 null。
+   *
+   * @returns {string|null} DataPage 部署 ID
+   */
+  function getDataPageId() {
+    const match = location.pathname.match(/\/dp\/([a-z0-9]+)/i);
+    return match ? match[1] : null;
+  }
+
+  /**
+   * 获取当前 DataPage 对应的审批配置。
+   * 未登记的页面回退到 DEFAULT_CONFIG（原有逻辑）。
+   *
+   * @returns {{inlineEditField: string, options: Array}} 当前页面的审批配置
+   */
+  function getCurrentConfig() {
+    const id = getDataPageId();
+    return (id && DATAPAGE_CONFIGS[id]) || DEFAULT_CONFIG;
+  }
+
   /**
    * 检查扩展上下文是否仍然有效。
    *
@@ -139,11 +214,14 @@
     let startIndex = allItems.findIndex(item => item.recordId === clickedRecordId);
     if (startIndex === -1) startIndex = 0;
 
-    /* 存储任务队列，currentIndex 表示用户当前正在审阅的位置 */
+    /* 存储任务队列，currentIndex 表示用户当前正在审阅的位置。
+     * 同时把当前 DataPage 的审批配置（主要是 options）写入队列，
+     * 以便目标（外部）页面脚本能据此渲染正确的审批按钮。 */
     safeStorage("set", {
       taskQueue: {
         items: allItems,
-        currentIndex: startIndex
+        currentIndex: startIndex,
+        config: getCurrentConfig()
       },
       /* 清空操作队列，确保不会残留上一次会话的数据 */
       caspioOperations: []
@@ -297,8 +375,12 @@
 
       editLink.click();
 
-      /* 步骤 2：等待审批下拉框出现 */
-      const selectElement = await waitForElement('select[name="InlineEditCatmanApproval"]', 10000);
+      /* 步骤 2：等待审批下拉框出现。
+       * 下拉框的 name 因 DataPage 而异，从当前页面配置中取得：
+       * - 页面一：InlineEditCatmanApproval
+       * - 页面二：InlineEditTargetMarket */
+      const inlineEditField = getCurrentConfig().inlineEditField;
+      const selectElement = await waitForElement(`select[name="${inlineEditField}"]`, 10000);
       if (!selectElement) {
         console.error("[Caspio Assistant] 审批下拉框未出现");
         await removeFirstOperation();

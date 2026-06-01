@@ -94,11 +94,20 @@
     const buttonsContainer = document.createElement("div");
     buttonsContainer.className = "cao-buttons";
 
-    const options = [
-      { text: "Approved without KAM", value: "Approved without KAM", className: "cao-btn cao-btn-approve" },
-      { text: "Approved with KAM",    value: "Approved with KAM",    className: "cao-btn cao-btn-approve-kam" },
-      { text: "Declined",             value: "Declined",             className: "cao-btn cao-btn-decline" }
-    ];
+    /**
+     * 审批按钮列表由发起审批的 Caspio DataPage 决定，随 taskQueue.config 传入。
+     * 不同页面的可选审批值不同（例如页面一为三选项的 Catman 审批，
+     * 页面二为 OK (approved) / Declined 二选一）。
+     * 若队列中缺少 config（理论上不应发生，或来自旧版本数据），
+     * 回退到原有的三选项 Catman 审批，保证向后兼容。
+     */
+    const options = (queue.config && Array.isArray(queue.config.options))
+      ? queue.config.options
+      : [
+          { text: "Approved without KAM", value: "Approved without KAM", className: "cao-btn cao-btn-approve" },
+          { text: "Approved with KAM",    value: "Approved with KAM",    className: "cao-btn cao-btn-approve-kam" },
+          { text: "Declined",             value: "Declined",             className: "cao-btn cao-btn-decline" }
+        ];
 
     options.forEach((option) => {
       const btn = document.createElement("button");

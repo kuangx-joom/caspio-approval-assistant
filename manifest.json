@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Caspio Approval Assistant",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Streamline Caspio approval workflow: review external links and submit approval decisions automatically.",
   "permissions": [
     "storage",

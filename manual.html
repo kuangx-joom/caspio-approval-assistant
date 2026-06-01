@@ -597,11 +597,10 @@ Edit row N → Select → Update         Last page → tab closes
     <p>Once the approval toolbar appears at the top of the vendor page:</p>
     <ol>
       <li>Review the vendor's information on the page.</li>
-      <li>Click one of the three approval buttons:
+      <li>Click one of the approval buttons. The available buttons depend on which DataPage you started from (see <a href="#approval-options">Approval Options</a>):
         <ul>
-          <li><span class="btn-preview btn-green">Approved without KAM</span></li>
-          <li><span class="btn-preview btn-blue">Approved with KAM</span></li>
-          <li><span class="btn-preview btn-red">Declined</span></li>
+          <li>Catman Approval page: <span class="btn-preview btn-green">Approved without KAM</span> <span class="btn-preview btn-blue">Approved with KAM</span> <span class="btn-preview btn-red">Declined</span></li>
+          <li>Initial Application Sorting page: <span class="btn-preview btn-green">OK (approved)</span> <span class="btn-preview btn-red">Declined</span></li>
         </ul>
       </li>
       <li>The page will automatically navigate to the <strong>next vendor</strong> in the queue.</li>
@@ -662,6 +661,11 @@ Edit row N → Select → Update         Last page → tab closes
     <!-- ========== APPROVAL OPTIONS ========== -->
     <h2 id="approval-options">Approval Options</h2>
 
+    <p>The approval buttons shown on the toolbar depend on which Caspio DataPage you started the review from. The extension currently supports two DataPages.</p>
+
+    <h3>DataPage 1 &mdash; Catman Approval</h3>
+    <p>Started from <code>/dp/111d6000ed43124f32b24bd99611</code>. Shows three options:</p>
+
     <table>
       <thead>
         <tr>
@@ -690,6 +694,33 @@ Edit row N → Select → Update         Last page → tab closes
     </table>
 
     <p>These values correspond exactly to the options in the <strong>CatmanApproval</strong> dropdown field in Caspio's inline edit form.</p>
+
+    <h3>DataPage 2 &mdash; Initial Application Sorting</h3>
+    <p>Started from <code>/dp/111d6000f90d0b783d8f420784b1</code>. This page only displays applications whose <strong>Target Market</strong> field is empty, so every record needs a decision. Shows two options:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Button Color</th>
+          <th>Value Set in Caspio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>OK (approved)</td>
+          <td><span class="btn-preview btn-green">Green</span></td>
+          <td><code>OK (approved)</code></td>
+        </tr>
+        <tr>
+          <td>Declined</td>
+          <td><span class="btn-preview btn-red">Red</span></td>
+          <td><code>Declined</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>These values correspond exactly to the options in the <strong>Target Market</strong> dropdown field in Caspio's inline edit form.</p>
 
     <hr>
 

@@ -1,1 +1,4 @@
 .claude/
+
+# HAR captures may contain live session tokens / credentials — never commit
+*.har
