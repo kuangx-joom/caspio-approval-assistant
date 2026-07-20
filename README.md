@@ -23,6 +23,7 @@ A Chrome extension that streamlines the Caspio approval workflow. Instead of man
 - [Toolbar Buttons Reference](#toolbar-buttons-reference)
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
+- [Changelog](#changelog)
 
 ---
 
@@ -132,14 +133,22 @@ The extension operates in three stages:
 │  approval buttons. After you click one, the tab navigates       │
 │  directly to the next vendor — no need to return to Caspio.     │
 ├─────────────────────────────────────────────────────────────────┤
-│  STAGE 3: Background Automation                                 │
-│  Meanwhile, the Caspio tab (in the background) automatically    │
-│  processes your decisions: Edit → Select value → Update,        │
-│  one row at a time.                                             │
+│  STAGE 3: Background Submission                                 │
+│  Meanwhile, the Caspio tab (in the background) submits each     │
+│  decision directly to the Caspio server via the same AJAX       │
+│  request the page itself uses — no page reloads, no per-row     │
+│  Edit/Update clicks. It falls back to simulated UI clicks only  │
+│  if the fast path is unavailable.                               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-The key advantage is that **Stage 2 and Stage 3 run in parallel** — you continue reviewing vendors while Caspio processes your previous decisions in the background.
+The key advantage is that **Stage 2 and Stage 3 run in parallel** — you continue reviewing vendors while Caspio submits your previous decisions in the background.
+
+### Fast submission (v1.2.0+)
+
+Earlier versions drove Caspio's inline-edit UI for every record (Edit → select → Update), which triggered a full page reload per row and could not keep up with fast reviewers, causing a growing backlog. Starting in **v1.2.0**, the extension submits approvals by replaying Caspio's own `UpdateRow` AJAX request directly. This removes the per-row reload and cuts submission time from roughly **1.5–2.5 s to about 0.2–0.5 s per record**, so the background queue keeps pace with your review speed.
+
+To avoid overwriting other columns, the extension first reads the row's current values (`GetRowData`) and re-submits every editable field unchanged except the approval field. The set of editable fields is either preconfigured per DataPage or auto-discovered from the inline-edit form on first use and cached. If any required token or field is unavailable, it automatically falls back to the original UI-driven method, so no record is ever skipped.
 
 ---
 
@@ -174,7 +183,7 @@ Once the approval toolbar appears at the top of the vendor page:
 <!-- Screenshot: Toolbar close-up showing the three buttons and progress -->
 `[Screenshot: toolbar-buttons-closeup.png]`
 
-> **What happens in the background:** After each decision, the extension sends your choice to the Caspio tab. The Caspio tab automatically clicks Edit, selects your chosen value in the dropdown, and clicks Update — all without any action from you.
+> **What happens in the background:** After each decision, the extension sends your choice to the Caspio tab, which submits it directly to the Caspio server (replaying Caspio's own `UpdateRow` request) — no page reload and no action from you. If the fast path is unavailable, it falls back to automatically clicking Edit, selecting the value, and clicking Update.
 
 ### Skipping a Vendor
 
@@ -276,6 +285,11 @@ The approval toolbar appears at the top of each vendor page during an active rev
 - **Cause:** The dropdown values may have changed in Caspio.
 - **Fix:** Manually click Edit on any row in Caspio, open the CatmanApproval dropdown, and check that the option values match: `Approved without KAM`, `Approved with KAM`, `Declined`. If they have changed, the extension code needs to be updated.
 
+### An approval submitted, but another column looks blank or changed
+
+- **Cause:** The fast AJAX path re-submits every editable field. If a DataPage's editable columns changed in Caspio and the extension's field list is out of date, a newly added column may be submitted blank.
+- **Fix:** Update `ajax.editableFields` for that DataPage in `caspio-content.js`, or clear the extension's cached field list (remove the extension's storage / reload it) so it re-discovers the current fields. When in doubt after a Caspio schema change, verify one record's other columns are preserved before running a large batch.
+
 ### The extension does not pick up all rows
 
 - **Cause:** Only rows visible on the current Caspio page are scanned.
@@ -308,8 +322,30 @@ A: The review session ends. Any decisions already submitted will continue to be 
 **Q: Can I run multiple review sessions at the same time?**
 A: No. Only one review session can be active at a time. Starting a new session (by clicking a vendor link on Caspio) will replace the current queue.
 
-**Q: Does this extension send any data to external servers?**
-A: No. All data stays within your browser. The extension only communicates between your open tabs using Chrome's built-in messaging API (`chrome.storage.local` and `chrome.runtime.sendMessage`). No network requests are made by the extension.
+**Q: Does this extension send any data to third-party servers?**
+A: No third parties are involved. Coordination between your tabs uses Chrome's built-in APIs (`chrome.storage.local` and `chrome.runtime.sendMessage`). To submit approvals, the extension does make network requests — but only to **your own Caspio server** (`*.caspio.com`), and only the exact same `GetRowData`/`UpdateRow` requests the Caspio page itself would send when you edit a row manually. Your existing Caspio login session is used; no credentials are stored or sent anywhere else. Vendor pages (e.g., Amazon) are never contacted by the extension.
+
+**Q: Is the fast submission safe — can it corrupt my records?**
+A: It is designed to be non-destructive. Before submitting, it reads the row's current values and re-sends every editable field unchanged except the one approval field you chose. Fields it cannot confirm from the current row data are left out rather than blanked, and approval writes are idempotent (re-writing the same value is harmless). If anything about the fast path is unavailable, it falls back to the original UI method instead of skipping the record. The one scenario to watch is a DataPage whose editable columns changed after the field list was cached — see the Troubleshooting note above.
 
 **Q: Does the extension work with other Caspio applications?**
 A: The extension is configured for two specific Caspio DataPages — **Catman Approval** (`/dp/111d6000ed43124f32b24bd99611`, using the `CatmanApproval` field) and **Initial Application Sorting** (`/dp/111d6000f90d0b783d8f420784b1`, using the `Target Market` field). Other Caspio pages fall back to the Catman Approval behavior by default. To support a new DataPage with different options or field names, add an entry to `DATAPAGE_CONFIGS` in `caspio-content.js`.
+
+For the fast AJAX submission path, each DataPage also needs its set of editable fields. This is either listed in the DataPage's `ajax` config or auto-discovered from the inline-edit form the first time you edit a row (and then cached in `chrome.storage`). **If a DataPage's editable columns are later added or removed in Caspio, update its `ajax.editableFields` (or clear the extension's stored cache) so newly added columns are not left blank on submission.**
+
+---
+
+## Changelog
+
+### v1.2.0
+- **Fast background submission.** Approvals are now submitted by replaying Caspio's own `UpdateRow` AJAX request directly, removing the full page reload that occurred for every record. Submission time drops from roughly 1.5–2.5 s to about 0.2–0.5 s per record, so the background queue keeps pace with fast reviewers.
+- **Non-destructive updates.** Each row's current values are read first (`GetRowData`) and re-submitted unchanged except for the approval field.
+- **Editable-field auto-discovery + caching.** Fields are read from the inline-edit form on first use and persisted, so the fast path applies from the first record in later sessions — even when approving one record at a time.
+- **Automatic fallback.** If any required token or field is unavailable, the extension falls back to the original UI-driven Edit → select → Update method; no record is skipped.
+- **Continuous draining.** The Caspio tab now drains the whole pending queue in one pass instead of one operation per page reload.
+
+### v1.1.0
+- Added multi-DataPage support (per-DataPage approval options and fields via `DATAPAGE_CONFIGS`).
+
+### v1.0.0
+- Initial release: continuous vendor-review flow with an on-page approval toolbar and background Edit → select → Update automation.

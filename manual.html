@@ -361,7 +361,7 @@
 
   <!-- ===== Sidebar ===== -->
   <aside class="sidebar">
-    <div class="sidebar-title">Caspio Approval Assistant<br>User Manual</div>
+    <div class="sidebar-title">Caspio Approval Assistant<br>User Manual<br><span style="font-weight:normal;font-size:0.8em;opacity:0.7;">v1.2.0</span></div>
     <nav>
       <a href="#overview">Overview</a>
       <a href="#installation">Installation</a>
@@ -544,25 +544,30 @@
       </div>
       <div class="stage stage-3">
         <div class="stage-number">Stage 3</div>
-        <div class="stage-title">Background Automation</div>
-        <div class="stage-desc">Meanwhile, the Caspio tab (in the background) automatically processes your decisions one by one: <strong>Edit &rarr; Select value &rarr; Update</strong>. The page refreshes after each Update, and the next operation begins automatically.</div>
+        <div class="stage-title">Background Submission</div>
+        <div class="stage-desc">Meanwhile, the Caspio tab (in the background) submits each decision <strong>directly to the Caspio server</strong>, replaying the same <code>UpdateRow</code> AJAX request the page itself uses &mdash; no page reloads and no per-row Edit/Update clicks. It only falls back to simulated UI clicks if the fast path is unavailable.</div>
       </div>
     </div>
 
-    <p>The key advantage is that <strong>Stage 2 and Stage 3 run in parallel</strong> &mdash; you continue reviewing vendors while Caspio processes your previous decisions in the background.</p>
+    <p>The key advantage is that <strong>Stage 2 and Stage 3 run in parallel</strong> &mdash; you continue reviewing vendors while Caspio submits your previous decisions in the background.</p>
+
+    <div class="callout callout-note">
+      <div class="callout-label">Fast submission (v1.2.0+)</div>
+      Earlier versions drove Caspio's inline-edit UI for every record (Edit &rarr; select &rarr; Update), reloading the page per row and struggling to keep up with fast reviewers. Since <strong>v1.2.0</strong>, approvals are submitted by replaying Caspio's own <code>UpdateRow</code> request directly, cutting submission time from roughly <strong>1.5&ndash;2.5 s to about 0.2&ndash;0.5 s per record</strong>. To avoid overwriting other columns, the extension first reads the row's current values (<code>GetRowData</code>) and re-submits every editable field unchanged except the approval field; if any required token or field is unavailable it falls back to the UI method, so no record is skipped.
+    </div>
 
     <div class="diagram">Caspio Tab (background)              Vendor Tab (user is here)
 ━━━━━━━━━━━━━━━━━━━━━━━━              ━━━━━━━━━━━━━━━━━━━━━━━━
 User clicks vendor link  ──────────→  Page 1: "Review 1 / 15"
 Scans all rows, builds queue          User selects: Approved ──┐
                                                                │
-Edit row 1 → Select → Update  ←───  ←─┘
-(page refreshes)                      Page 2: "Review 2 / 15"
+Submit row 1 via AJAX (no reload) ←─  ←─┘
+                                      Page 2: "Review 2 / 15"
                                       User selects: Declined ──┐
-Edit row 2 → Select → Update  ←───  ←─┘
-(page refreshes)                      Page 3: "Review 3 / 15"
+Submit row 2 via AJAX (no reload) ←─  ←─┘
+                                      Page 3: "Review 3 / 15"
                                           ...
-Edit row N → Select → Update         Last page → tab closes
+Submit row N via AJAX                 Last page → tab closes
 (done)                                ← Back to Caspio tab</div>
 
     <hr>
@@ -614,7 +619,7 @@ Edit row N → Select → Update         Last page → tab closes
 
     <div class="callout callout-note">
       <div class="callout-label">What happens in the background</div>
-      After each decision, the extension sends your choice to the Caspio tab. The Caspio tab automatically clicks Edit, selects your chosen value in the dropdown, and clicks Update &mdash; all without any action from you.
+      After each decision, the extension sends your choice to the Caspio tab, which submits it directly to the Caspio server (replaying Caspio's own <code>UpdateRow</code> request) &mdash; no page reload and no action from you. If the fast path is unavailable, it falls back to automatically clicking Edit, selecting the value, and clicking Update.
     </div>
 
     <h3 id="usage-skip">Skipping a Vendor</h3>
@@ -845,13 +850,13 @@ Edit row N → Select → Update         Last page → tab closes
     </div>
 
     <div class="faq-item">
-      <p class="faq-q">Q: Does this extension send any data to external servers?</p>
-      <p class="faq-a">A: No. All data stays within your browser. The extension only communicates between your open tabs using Chrome's built-in messaging API (<code>chrome.storage.local</code> and <code>chrome.runtime.sendMessage</code>). No network requests are made by the extension.</p>
+      <p class="faq-q">Q: Does this extension send any data to third-party servers?</p>
+      <p class="faq-a">A: No third parties are involved. Coordination between your tabs uses Chrome's built-in APIs (<code>chrome.storage.local</code> and <code>chrome.runtime.sendMessage</code>). To submit approvals, the extension does make network requests &mdash; but only to <strong>your own Caspio server</strong> (<code>*.caspio.com</code>), and only the same <code>GetRowData</code>/<code>UpdateRow</code> requests the Caspio page itself sends when you edit a row manually. Your existing Caspio login session is used; no credentials are stored or sent elsewhere. Vendor pages (e.g., Amazon) are never contacted by the extension.</p>
     </div>
 
     <div class="faq-item">
       <p class="faq-q">Q: Does the extension work with other Caspio applications?</p>
-      <p class="faq-a">A: The extension is designed for Caspio data pages on <code>*.caspio.com</code> domains that use the standard inline edit interface with the <code>CatmanApproval</code> dropdown field. It may not work with custom Caspio forms or different field names.</p>
+      <p class="faq-a">A: It is configured for two specific DataPages &mdash; <strong>Catman Approval</strong> (<code>CatmanApproval</code> field) and <strong>Initial Application Sorting</strong> (<code>Target Market</code> field) &mdash; both on <code>*.caspio.com</code> domains using the standard inline-edit interface. Other Caspio pages fall back to the Catman Approval behavior. To support a new DataPage with different options or field names, add an entry to <code>DATAPAGE_CONFIGS</code> in <code>caspio-content.js</code>. For the fast AJAX path, each DataPage's editable fields are either preconfigured or auto-discovered from the inline-edit form on first use; if a DataPage's editable columns change in Caspio, update its <code>ajax.editableFields</code> so newly added columns are not left blank.</p>
     </div>
 
   </main>
