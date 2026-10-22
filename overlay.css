@@ -21,7 +21,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  flex-wrap: wrap; /* 允许 Duplicates 横幅独占第二行 */
+  gap: 12px 16px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 14px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -111,10 +112,109 @@
   font-weight: 600;
 }
 
+/* ====== Caspio 待提交数量标记，v1.4.0 ====== */
+
+/* 全部已提交：低调显示 */
+#caspio-approval-overlay .cao-pending {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #9fb3c8;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 有积压：琥珀色提醒，数字增长即说明提交速度跟不上判断速度 */
+#caspio-approval-overlay .cao-pending.cao-pending-busy {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+/* 本轮有保存失败的条目：红色提醒（优先级高于积压的琥珀色） */
+#caspio-approval-overlay .cao-pending.cao-pending-failed {
+  background-color: rgba(220, 53, 69, 0.25);
+  color: #ff8a95;
+}
+
+/* ====== Duplicates（历史重复申请）展示，v1.3.0 ====== */
+
+/* 无重复：工具栏行内的低调标记，仅提示“已检查、无历史记录” */
+#caspio-approval-overlay .cao-dup-none {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #8fe3a5;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 有重复：独占一整行的琥珀色警示横幅，与深色工具栏形成强对比，确保第一眼可见 */
+#caspio-approval-overlay .cao-dup-banner {
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background-color: #ffc107;
+  color: #1a1a1a;
+  font-size: 16px;
+  font-weight: 600;
+  box-sizing: border-box;
+  box-shadow: inset 0 0 0 2px #e0a800;
+}
+
+#caspio-approval-overlay .cao-dup-title {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* 多种重复类型时每种一行，左对齐纵向排列 */
+#caspio-approval-overlay .cao-dup-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  word-break: break-word;
+}
+
+#caspio-approval-overlay .cao-dup-line {
+  display: block;
+}
+
+/* 横幅内的徽标：重复类型 / 通过次数 / 拒绝次数 */
+#caspio-approval-overlay .cao-dup-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 0 2px;
+  border-radius: 4px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+#caspio-approval-overlay .cao-dup-type {
+  background-color: #1a1a2e;
+}
+
+#caspio-approval-overlay .cao-dup-approved {
+  background-color: #28a745;
+}
+
+#caspio-approval-overlay .cao-dup-declined {
+  background-color: #dc3545;
+}
+
 /**
  * 为页面顶部留出浮层的空间，避免浮层遮挡页面原有内容。
- * 通过给 body 添加 padding-top 来实现。
+ * 通过给 body 添加 padding-top 来实现；高度由 target-content.js 按浮层实际高度
+ * 写入 --cao-overlay-height（出现 Duplicates 横幅时浮层会变高），缺省 56px。
  */
 body.caspio-approval-active {
-  padding-top: 56px !important;
+  padding-top: var(--cao-overlay-height, 56px) !important;
 }

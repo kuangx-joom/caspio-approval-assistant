@@ -2,3 +2,6 @@
 
 # HAR captures may contain live session tokens / credentials — never commit
 *.har
+
+# 审核日志 CSV 含真实商家数据（下载目录可能指向本文件夹）—— 不要提交
+Caspio_review_log_*.csv

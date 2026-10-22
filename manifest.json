@@ -1,18 +1,27 @@
 {
   "manifest_version": 3,
   "name": "Caspio Approval Assistant",
-  "version": "1.2.0",
+  "version": "1.5.1",
   "description": "Streamline Caspio approval workflow: review external links and submit approval decisions automatically.",
   "permissions": [
     "storage",
     "activeTab",
     "tabs",
-    "scripting"
+    "scripting",
+    "downloads"
   ],
   "host_permissions": [
     "*://*.caspio.com/*",
     "<all_urls>"
   ],
+  "action": {
+    "default_title": "Caspio Approval Assistant: click to download the review log (CSV, last 14 days)",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "background": {
     "service_worker": "background.js"
   },

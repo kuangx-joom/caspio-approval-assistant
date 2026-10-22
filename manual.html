@@ -353,6 +353,27 @@
       .sidebar { display: none; }
       .content { margin-left: 0; padding: 32px 24px 80px; }
     }
+    /* ===== Stage 4 & Screenshots (v1.5.1) ===== */
+    .stage-4 { background: #f3e8ff; border-color: #7c3aed; }
+    .stage-4 .stage-number { color: #7c3aed; }
+
+    figure.shot {
+      margin: 16px 0 20px;
+    }
+
+    figure.shot img {
+      display: block;
+      max-width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    }
+
+    figure.shot figcaption {
+      font-size: 13px;
+      color: #666;
+      margin-top: 6px;
+    }
   </style>
 </head>
 <body>
@@ -361,7 +382,7 @@
 
   <!-- ===== Sidebar ===== -->
   <aside class="sidebar">
-    <div class="sidebar-title">Caspio Approval Assistant<br>User Manual<br><span style="font-weight:normal;font-size:0.8em;opacity:0.7;">v1.2.0</span></div>
+    <div class="sidebar-title">Caspio Approval Assistant<br>User Manual<br><span style="font-weight:normal;font-size:0.8em;opacity:0.7;">v1.5.1</span></div>
     <nav>
       <a href="#overview">Overview</a>
       <a href="#installation">Installation</a>
@@ -370,17 +391,24 @@
       <a href="#install-step3" class="sub">Step 3: Developer Mode</a>
       <a href="#install-step4" class="sub">Step 4: Load Extension</a>
       <a href="#install-step5" class="sub">Step 5: Verify</a>
+      <a href="#install-update" class="sub">Updating to a New Version</a>
       <a href="#how-it-works">How It Works</a>
       <a href="#usage-guide">Usage Guide</a>
       <a href="#usage-start" class="sub">Starting a Review Session</a>
       <a href="#usage-decide" class="sub">Making Approval Decisions</a>
+      <a href="#usage-duplicates" class="sub">Duplicate History</a>
       <a href="#usage-skip" class="sub">Skipping a Vendor</a>
       <a href="#usage-stop" class="sub">Stopping a Session</a>
       <a href="#usage-complete" class="sub">Completing All Reviews</a>
+      <a href="#usage-results" class="sub">Checking Results on Caspio</a>
+      <a href="#usage-retry" class="sub">Retrying Failed Decisions</a>
+      <a href="#usage-log" class="sub">Review Log (CSV)</a>
       <a href="#approval-options">Approval Options</a>
-      <a href="#toolbar-reference">Toolbar Buttons Reference</a>
+      <a href="#toolbar-reference">Toolbar Reference</a>
+      <a href="#statusbar-reference">Status Bar Reference</a>
       <a href="#troubleshooting">Troubleshooting</a>
       <a href="#faq">FAQ</a>
+      <a href="#whats-new">What's New</a>
     </nav>
   </aside>
 
@@ -389,7 +417,7 @@
 
     <h1>Caspio Approval Assistant</h1>
     <p class="subtitle">
-      A Chrome extension that streamlines the Caspio approval workflow. Instead of manually switching between external vendor pages and Caspio to submit each approval, this extension lets you review vendors in a continuous flow &mdash; make your decision on the vendor's page, and the extension handles the rest automatically in the background.
+      A Chrome extension that streamlines the Caspio approval workflow. Instead of manually switching between external vendor pages and Caspio to submit each approval, this extension lets you review vendors in a continuous flow &mdash; make your decision on the vendor's page, and the extension saves it to Caspio in the background, verifies it, and keeps a downloadable review log.
     </p>
 
     <!-- ========== OVERVIEW ========== -->
@@ -405,7 +433,17 @@
       <li>Repeat for the next vendor</li>
     </ol>
 
-    <p><strong>This extension automates steps 2&ndash;5 entirely.</strong> You simply click through vendor pages and make your decisions &mdash; the extension queues up all the Caspio operations and executes them in the background.</p>
+    <p><strong>This extension automates steps 2&ndash;5 entirely.</strong> You simply click through vendor pages and make your decisions &mdash; the extension queues the Caspio updates and executes them in the background.</p>
+
+    <h3>Key features</h3>
+    <ul>
+      <li><strong>Continuous review</strong> &mdash; an approval toolbar on every vendor page; one click saves the decision and opens the next vendor.</li>
+      <li><strong>Duplicate history at a glance</strong> &mdash; the Caspio <em>Duplicates: what happened before</em> column is shown prominently on each vendor page.</li>
+      <li><strong>Fast background saving</strong> &mdash; decisions are sent straight to the Caspio server, up to 3 at a time.</li>
+      <li><strong>Verified saves</strong> &mdash; every decision is checked against the value Caspio actually stored; failures are retried automatically and can be resubmitted with one click.</li>
+      <li><strong>Progress you can see</strong> &mdash; a pending counter on the vendor toolbar, a large status bar at the top of the Caspio page, and &#10003; / &#10007; marks on each Caspio row.</li>
+      <li><strong>Review log (CSV)</strong> &mdash; every decision and its result is logged and downloaded automatically when a session ends.</li>
+    </ul>
 
     <h3>Before vs. After</h3>
     <table>
@@ -416,34 +454,13 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Open vendor page</td>
-          <td class="compare-with">Open vendor page</td>
-        </tr>
-        <tr>
-          <td>Review vendor</td>
-          <td class="compare-with">Review vendor</td>
-        </tr>
-        <tr>
-          <td>Switch back to Caspio</td>
-          <td class="compare-with">Click approval button on the toolbar</td>
-        </tr>
-        <tr>
-          <td>Click Edit</td>
-          <td class="compare-auto">(automatically navigates to next vendor)</td>
-        </tr>
-        <tr>
-          <td>Select approval value</td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Click Update</td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Click next vendor link</td>
-          <td></td>
-        </tr>
+        <tr><td>Open vendor page</td><td class="compare-with">Open vendor page</td></tr>
+        <tr><td>Review vendor</td><td class="compare-with">Review vendor (duplicate history shown on top)</td></tr>
+        <tr><td>Switch back to Caspio</td><td class="compare-with">Click approval button on the toolbar</td></tr>
+        <tr><td>Click Edit</td><td class="compare-auto">(automatically navigates to next vendor)</td></tr>
+        <tr><td>Select approval value</td><td></td></tr>
+        <tr><td>Click Update</td><td></td></tr>
+        <tr><td>Click next vendor link</td><td></td></tr>
       </tbody>
     </table>
 
@@ -460,6 +477,9 @@
 ├── caspio-content.js
 ├── target-content.js
 ├── overlay.css
+├── manual.html          (this manual)
+├── README.md
+├── screenshots/         (images used by this manual)
 └── icons/
     ├── icon16.png
     ├── icon48.png
@@ -502,13 +522,8 @@
       Screenshot: Load unpacked button highlighted
     </div>
 
-    <div class="screenshot">
-      <!-- Replace with: <img src="screenshots/folder-selection.png" alt="Folder selection dialog"> -->
-      Screenshot: Folder selection dialog
-    </div>
-
     <h3 id="install-step5">Step 5: Verify Installation</h3>
-    <p>After loading, the extension should appear in your extensions list with the name <strong>Caspio Approval Assistant</strong>. Verify that:</p>
+    <p>After loading, the extension should appear in your extensions list with the name <strong>Caspio Approval Assistant</strong> and version <strong>1.5.1</strong>. Verify that:</p>
     <ul>
       <li>The extension is shown as enabled (toggle is blue/on)</li>
       <li>No error messages are displayed</li>
@@ -521,7 +536,21 @@
 
     <div class="callout callout-tip">
       <div class="callout-label">Tip</div>
-      You can pin the extension to your Chrome toolbar by clicking the puzzle icon (<strong>Extensions</strong>) in the toolbar and clicking the pin icon next to <strong>Caspio Approval Assistant</strong>.
+      Pin the extension to your Chrome toolbar (puzzle icon &rarr; pin next to <strong>Caspio Approval Assistant</strong>). Clicking the pinned icon downloads the review log for the last 14 days &mdash; see <a href="#usage-log">Review Log (CSV)</a>.
+    </div>
+
+    <p>The extension uses these Chrome permissions: <code>storage</code> (queue and log), <code>tabs</code> / <code>activeTab</code> / <code>scripting</code> (coordinating the Caspio and vendor tabs), and <code>downloads</code> (saving the review log CSV to your Downloads folder).</p>
+
+    <h3 id="install-update">Updating to a New Version</h3>
+    <ol>
+      <li>Replace the files in the extension folder with the new version.</li>
+      <li>Go to <code>chrome://extensions</code> and click <strong>Reload</strong> (circular arrow) on the <strong>Caspio Approval Assistant</strong> card.</li>
+      <li><strong>Refresh the Caspio page</strong> (F5). Pages that were open before the reload keep running the old script until refreshed.</li>
+      <li>Start a new review session by clicking a vendor link &mdash; sessions started before the update do not carry the new data (e.g. duplicate history).</li>
+    </ol>
+    <div class="callout callout-note">
+      <div class="callout-label">Note</div>
+      Decisions that were still waiting to be saved are kept across updates and are processed once the Caspio page is refreshed.
     </div>
 
     <hr>
@@ -529,46 +558,55 @@
     <!-- ========== HOW IT WORKS ========== -->
     <h2 id="how-it-works">How It Works</h2>
 
-    <p>The extension operates in three stages:</p>
+    <p>The extension operates in four stages:</p>
 
     <div class="stages">
       <div class="stage stage-1">
         <div class="stage-number">Stage 1</div>
         <div class="stage-title">Queue Building</div>
-        <div class="stage-desc">When you click a vendor link on the Caspio page, the extension scans <strong>all rows</strong> in the table and builds a review queue starting from the row you clicked.</div>
+        <div class="stage-desc">When you click a vendor link on the Caspio page, the extension scans <strong>all rows</strong> in the table (link, record ID, company, duplicate history) and builds a review queue starting from the row you clicked.</div>
       </div>
       <div class="stage stage-2">
         <div class="stage-number">Stage 2</div>
         <div class="stage-title">Vendor Review</div>
-        <div class="stage-desc">On each vendor page, a toolbar appears at the top with approval buttons and a progress indicator (e.g., <em>Review 3 / 15</em>). After you click a button, the tab navigates directly to the next vendor &mdash; no need to return to Caspio.</div>
+        <div class="stage-desc">On each vendor page, a toolbar appears at the top with approval buttons, a progress indicator (e.g., <em>Review 43 / 50</em>) and the record's duplicate history. After you click a button, the tab navigates directly to the next vendor &mdash; no need to return to Caspio.</div>
       </div>
       <div class="stage stage-3">
         <div class="stage-number">Stage 3</div>
-        <div class="stage-title">Background Submission</div>
-        <div class="stage-desc">Meanwhile, the Caspio tab (in the background) submits each decision <strong>directly to the Caspio server</strong>, replaying the same <code>UpdateRow</code> AJAX request the page itself uses &mdash; no page reloads and no per-row Edit/Update clicks. It only falls back to simulated UI clicks if the fast path is unavailable.</div>
+        <div class="stage-title">Background Saving</div>
+        <div class="stage-desc">Meanwhile, the Caspio tab (in the background) sends each decision <strong>directly to the Caspio server</strong>, using the same request the page itself uses &mdash; up to 3 records at a time, no page reloads and no per-row Edit/Update clicks.</div>
+      </div>
+      <div class="stage stage-4">
+        <div class="stage-number">Stage 4</div>
+        <div class="stage-title">Verification &amp; Review Log</div>
+        <div class="stage-desc">Each save is checked against the value Caspio stored. Failures are retried automatically. Every decision and its result is written to the review log, which is downloaded as CSV when the session ends.</div>
       </div>
     </div>
 
-    <p>The key advantage is that <strong>Stage 2 and Stage 3 run in parallel</strong> &mdash; you continue reviewing vendors while Caspio submits your previous decisions in the background.</p>
+    <p>The key advantage is that <strong>Stage 2 and Stages 3&ndash;4 run in parallel</strong> &mdash; you keep reviewing vendors while Caspio saves your previous decisions in the background.</p>
 
-    <div class="callout callout-note">
-      <div class="callout-label">Fast submission (v1.2.0+)</div>
-      Earlier versions drove Caspio's inline-edit UI for every record (Edit &rarr; select &rarr; Update), reloading the page per row and struggling to keep up with fast reviewers. Since <strong>v1.2.0</strong>, approvals are submitted by replaying Caspio's own <code>UpdateRow</code> request directly, cutting submission time from roughly <strong>1.5&ndash;2.5 s to about 0.2&ndash;0.5 s per record</strong>. To avoid overwriting other columns, the extension first reads the row's current values (<code>GetRowData</code>) and re-submits every editable field unchanged except the approval field; if any required token or field is unavailable it falls back to the UI method, so no record is skipped.
-    </div>
+    <div class="diagram">Caspio Tab (background)               Vendor Tab (user is here)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━          ━━━━━━━━━━━━━━━━━━━━━━━━━━
+User clicks vendor link  ───────────→  Page 1: "Review 1 / 50"
+Scans all rows, builds queue           User selects: Approved ──┐
+                                                                │
+Save + verify row 1      ←───────────  ←────────────────────────┘
+                                       Page 2: "Review 2 / 50"
+Save + verify row 2      ←───────────  User selects: Declined
+  (up to 3 rows in parallel)           Page 3: "Review 3 / 50"
+                                           ...
+Save + verify row N                    Last page → tab closes
+Status bar turns green                 ← Back to Caspio tab
+Review log CSV downloaded</div>
 
-    <div class="diagram">Caspio Tab (background)              Vendor Tab (user is here)
-━━━━━━━━━━━━━━━━━━━━━━━━              ━━━━━━━━━━━━━━━━━━━━━━━━
-User clicks vendor link  ──────────→  Page 1: "Review 1 / 15"
-Scans all rows, builds queue          User selects: Approved ──┐
-                                                               │
-Submit row 1 via AJAX (no reload) ←─  ←─┘
-                                      Page 2: "Review 2 / 15"
-                                      User selects: Declined ──┐
-Submit row 2 via AJAX (no reload) ←─  ←─┘
-                                      Page 3: "Review 3 / 15"
-                                          ...
-Submit row N via AJAX                 Last page → tab closes
-(done)                                ← Back to Caspio tab</div>
+    <h3>Submission details</h3>
+    <ul>
+      <li><strong>Speed.</strong> Caspio's server needs about <strong>1.7 s per record</strong> (&asymp;0.4 s to read the row + &asymp;1.3 s to save it). Saving up to <strong>3 records in parallel</strong> brings the effective cost to roughly <strong>0.6 s per record</strong>.</li>
+      <li><strong>Non-destructive.</strong> Before saving, the extension reads the row's current values and re-sends every editable field unchanged except the approval field.</li>
+      <li><strong>Verified.</strong> Caspio's response contains the row as stored. A decision only counts as <strong>Saved</strong> when the stored approval value matches your choice.</li>
+      <li><strong>Retried.</strong> If a save fails, the extension switches to one-at-a-time mode and tries again; if that also fails, it falls back to clicking Edit &rarr; select &rarr; Update on the Caspio page. Only then is the decision marked <strong>Failed</strong>, and you can resubmit it with <strong>Retry failed</strong>.</li>
+      <li><strong>Resilient.</strong> Each request times out after 30 s so a stuck request cannot block the queue, and the Caspio tab is protected from Chrome's automatic tab discarding while a session is active.</li>
+    </ul>
 
     <hr>
 
@@ -593,46 +631,52 @@ Submit row N via AJAX                 Last page → tab closes
       Screenshot: Caspio page with vendor links visible, one highlighted
     </div>
 
-    <div class="screenshot">
-      <!-- Replace with: <img src="screenshots/vendor-page-with-toolbar.png" alt="Vendor page with approval toolbar"> -->
-      Screenshot: Vendor page with the approval toolbar visible at top
-    </div>
-
     <h3 id="usage-decide">Making Approval Decisions</h3>
     <p>Once the approval toolbar appears at the top of the vendor page:</p>
+    <figure class="shot">
+      <img src="screenshots/toolbar-no-duplicates.png" width="1280" alt="Vendor toolbar without duplicate history">
+      <figcaption>Vendor toolbar (Catman Approval page, record without duplicates)</figcaption>
+    </figure>
     <ol>
-      <li>Review the vendor's information on the page.</li>
+      <li>Review the vendor's information on the page, including the duplicate history (see <a href="#usage-duplicates">Duplicate History</a>).</li>
       <li>Click one of the approval buttons. The available buttons depend on which DataPage you started from (see <a href="#approval-options">Approval Options</a>):
         <ul>
           <li>Catman Approval page: <span class="btn-preview btn-green">Approved without KAM</span> <span class="btn-preview btn-blue">Approved with KAM</span> <span class="btn-preview btn-red">Declined</span></li>
           <li>Initial Application Sorting page: <span class="btn-preview btn-green">OK (approved)</span> <span class="btn-preview btn-red">Declined</span></li>
         </ul>
       </li>
-      <li>The page will automatically navigate to the <strong>next vendor</strong> in the queue.</li>
-      <li>The toolbar updates to show your current progress (e.g., <em>Review 3 / 15</em>).</li>
+      <li>The page automatically navigates to the <strong>next vendor</strong> in the queue.</li>
+      <li>The toolbar shows your progress (e.g., <em>Review 43 / 50</em>) and how many decisions are still being saved to Caspio (<em>Caspio: 3 pending</em> or <em>Caspio: all saved</em>). If the pending number keeps growing, Caspio is temporarily behind &mdash; it catches up on its own; just keep the Caspio tab open.</li>
     </ol>
-
-    <div class="screenshot">
-      <!-- Replace with: <img src="screenshots/toolbar-buttons-closeup.png" alt="Toolbar close-up"> -->
-      Screenshot: Toolbar close-up showing the three buttons and progress
-    </div>
 
     <div class="callout callout-note">
       <div class="callout-label">What happens in the background</div>
-      After each decision, the extension sends your choice to the Caspio tab, which submits it directly to the Caspio server (replaying Caspio's own <code>UpdateRow</code> request) &mdash; no page reload and no action from you. If the fast path is unavailable, it falls back to automatically clicking Edit, selecting the value, and clicking Update.
+      After each decision, the Caspio tab saves your choice directly to the Caspio server and verifies the stored value &mdash; no page reload and no action from you. See <a href="#how-it-works">Submission details</a>.
     </div>
+
+    <h3 id="usage-duplicates">Duplicate History</h3>
+    <p>If the Caspio DataPage has a <strong>Duplicates: what happened before</strong> column (or its Russian name <strong>Дубли: что было раньше</strong>), its value is shown on every vendor page:</p>
+    <figure class="shot">
+      <img src="screenshots/toolbar-duplicates.png" width="1280" alt="Vendor toolbar with duplicate history banner">
+      <figcaption>Duplicate history banner &mdash; one line per duplicate type</figcaption>
+    </figure>
+    <ul>
+      <li><strong>Duplicates found</strong> &mdash; an amber banner below the toolbar. Each duplicate type (<code>PHONE_DUP</code>, <code>COMPANY_DUP</code>, <code>STORE_DUP</code>, <code>WECHAT_DUP</code>, <code>BL_DUP</code>, &hellip;) is shown on its own line, with the number of earlier <strong>approved</strong> (green) and <strong>declined</strong> (red) applications and the date of the last one.</li>
+      <li><strong>No duplicates</strong> (the cell is empty / NULL) &mdash; a small green <em>No duplicates</em> tag next to the progress indicator.</li>
+      <li><strong>DataPage without the column</strong> &mdash; nothing is shown.</li>
+    </ul>
 
     <h3 id="usage-skip">Skipping a Vendor</h3>
     <p>If you want to skip a vendor without making a decision:</p>
     <ol>
       <li>Click the <span class="btn-preview btn-gray">Skip</span> button on the toolbar.</li>
       <li>The page navigates to the next vendor immediately.</li>
-      <li>No approval action is submitted to Caspio for the skipped vendor.</li>
+      <li>Nothing is saved to Caspio for the skipped vendor; it is recorded in the review log with status <strong>Skipped</strong>.</li>
     </ol>
 
     <div class="callout callout-note">
       <div class="callout-label">Note</div>
-      Skipped vendors are not processed. If you need to review them later, you will need to do so manually on the Caspio page.
+      To review skipped vendors later, filter the review log by <code>Status = Skipped</code> and process those records on the Caspio page.
     </div>
 
     <h3 id="usage-stop">Stopping a Review Session</h3>
@@ -640,12 +684,13 @@ Submit row N via AJAX                 Last page → tab closes
     <ol>
       <li>Click the <span class="btn-preview btn-gray">Stop</span> button on the toolbar.</li>
       <li>The toolbar disappears and the current page remains open.</li>
-      <li>Any decisions you already made will <strong>continue to be processed</strong> in the background on the Caspio tab.</li>
+      <li>Any decisions you already made <strong>continue to be saved</strong> in the background on the Caspio tab.</li>
+      <li>When they have all been processed, the review log of the session is downloaded automatically.</li>
     </ol>
 
     <div class="callout callout-important">
       <div class="callout-label">Important</div>
-      Stopping only ends the review flow &mdash; it does not cancel decisions you have already submitted. Those will still be applied to Caspio.
+      Stopping only ends the review flow &mdash; it does not cancel decisions you have already made. Those will still be saved to Caspio.
     </div>
 
     <h3 id="usage-complete">Completing All Reviews</h3>
@@ -653,13 +698,75 @@ Submit row N via AJAX                 Last page → tab closes
     <ol>
       <li>The vendor tab closes automatically.</li>
       <li>Chrome switches back to the Caspio tab.</li>
-      <li>The Caspio tab finishes processing any remaining operations in the background.</li>
+      <li>The Caspio tab finishes saving any remaining decisions; the status bar at the top of the page shows the progress (see below).</li>
+      <li>When every decision of the session has been processed, the <strong>review log is downloaded automatically</strong> (see <a href="#usage-log">Review Log (CSV)</a>).</li>
     </ol>
 
-    <div class="screenshot">
-      <!-- Replace with: <img src="screenshots/reviews-completed.png" alt="All reviews completed"> -->
-      Screenshot: All reviews completed, back on Caspio page
+    <h3 id="usage-results">Checking Results on the Caspio Page</h3>
+    <p>While decisions are being saved, and after a session, a large status bar is shown at the <strong>top center of the Caspio page</strong>:</p>
+    <figure class="shot">
+      <img src="screenshots/status-bar-pending.png" width="520" alt="Saving to Caspio: 13 pending · 2 failed">
+      <figcaption><strong>Saving</strong> (amber) &mdash; keep this tab open</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="screenshots/status-bar-failed.png" width="714" alt="2 of 25 decisions could not be saved to Caspio">
+      <figcaption><strong>Some failed</strong> (red) &mdash; click Retry failed</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="screenshots/status-bar-done.png" width="486" alt="All 25 decisions saved to Caspio">
+      <figcaption><strong>All saved</strong> (green)</figcaption>
+    </figure>
+
+    <p>Each processed record in the Caspio table is also marked:</p>
+    <ul>
+      <li>Row tinted green with a <em>&#10003; Saved: Declined</em> tag &mdash; the value was verified on the server. If the approval column is visible in the row, it is updated to the stored value.</li>
+      <li>Row tinted red with a <em>&#10007; Not saved: Declined</em> tag &mdash; the decision could not be saved.</li>
+    </ul>
+    <div class="callout callout-note">
+      <div class="callout-label">Note</div>
+      The marks are visual only. Refresh the Caspio page to see the table exactly as stored on the server.
     </div>
+    <div class="callout callout-warning">
+      <div class="callout-label">Keep the Caspio tab open</div>
+      If you try to close or reload the Caspio tab while decisions are still pending, Chrome asks <strong>&ldquo;Leave site?&rdquo;</strong> &mdash; choose <strong>Cancel</strong> and wait until the bar turns green or red.
+    </div>
+
+    <h3 id="usage-retry">Retrying Failed Decisions</h3>
+    <ol>
+      <li>On the red status bar, click <strong>Retry failed</strong>.</li>
+      <li>The failed decisions are put back into the queue and saved again; the bar turns amber while they are processed.</li>
+      <li>The log entries are updated in place (the <strong>Attempts</strong> column increases).</li>
+    </ol>
+    <p>If a decision keeps failing, check the <strong>Error</strong> column of the review log (see <a href="#troubleshooting">Troubleshooting</a>).</p>
+
+    <h3 id="usage-log">Review Log (CSV)</h3>
+    <p>Every decision (approval or skip) and its save result is recorded. The log is saved straight to your Chrome <strong>Downloads</strong> folder as <code>Caspio_review_log_YYYY-MM-DD_HHMMSS.csv</code>:</p>
+    <table>
+      <thead><tr><th>How</th><th>What is exported</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Automatically</strong> when a session ends (last vendor reached, or <strong>Stop</strong> clicked) and all its decisions have been processed</td><td>That session</td></tr>
+        <tr><td><strong>Download log</strong> button on the Caspio status bar</td><td>The current / latest session</td></tr>
+        <tr><td>Clicking the <strong>extension icon</strong> in the Chrome toolbar (file name <code>Caspio_review_log_all_&hellip;.csv</code>) &mdash; useful if the Caspio tab was closed</td><td>All sessions from the last 14 days</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>Column</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Session Started / Session ID</td><td>When the review session started and its identifier</td></tr>
+        <tr><td>Position</td><td>Position in the queue, e.g. <code>43 / 50</code></td></tr>
+        <tr><td>Decided At</td><td>When you clicked the button</td></tr>
+        <tr><td>Record ID / Company / Target URL</td><td>The Caspio record and the vendor page reviewed</td></tr>
+        <tr><td>Duplicates</td><td>The duplicate history shown during review</td></tr>
+        <tr><td>Decision</td><td>The value you chose (empty for skips)</td></tr>
+        <tr><td>Status</td><td><code>Saved</code>, <code>Failed</code>, <code>Skipped</code>, or <code>Pending</code> (not processed yet)</td></tr>
+        <tr><td>Method</td><td><code>AJAX</code> (fast path) or <code>UI</code> (Edit &rarr; select &rarr; Update fallback)</td></tr>
+        <tr><td>Attempts</td><td>Number of save attempts, including retries</td></tr>
+        <tr><td>Saved At / Value in Caspio</td><td>When it was verified and the value stored in Caspio</td></tr>
+        <tr><td>Error</td><td>Why a save failed (empty when saved)</td></tr>
+      </tbody>
+    </table>
+    <p>The file is UTF-8 with BOM, so Excel shows Chinese company names correctly. Log entries are kept in the browser for 14 days.</p>
 
     <hr>
 
@@ -672,29 +779,11 @@ Submit row N via AJAX                 Last page → tab closes
     <p>Started from <code>/dp/111d6000ed43124f32b24bd99611</code>. Shows three options:</p>
 
     <table>
-      <thead>
-        <tr>
-          <th>Option</th>
-          <th>Button Color</th>
-          <th>Value Set in Caspio</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Option</th><th>Button Color</th><th>Value Set in Caspio</th></tr></thead>
       <tbody>
-        <tr>
-          <td>Approved without KAM</td>
-          <td><span class="btn-preview btn-green">Green</span></td>
-          <td><code>Approved without KAM</code></td>
-        </tr>
-        <tr>
-          <td>Approved with KAM</td>
-          <td><span class="btn-preview btn-blue">Blue</span></td>
-          <td><code>Approved with KAM</code></td>
-        </tr>
-        <tr>
-          <td>Declined</td>
-          <td><span class="btn-preview btn-red">Red</span></td>
-          <td><code>Declined</code></td>
-        </tr>
+        <tr><td>Approved without KAM</td><td><span class="btn-preview btn-green">Green</span></td><td><code>Approved without KAM</code></td></tr>
+        <tr><td>Approved with KAM</td><td><span class="btn-preview btn-blue">Blue</span></td><td><code>Approved with KAM</code></td></tr>
+        <tr><td>Declined</td><td><span class="btn-preview btn-red">Red</span></td><td><code>Declined</code></td></tr>
       </tbody>
     </table>
 
@@ -704,24 +793,10 @@ Submit row N via AJAX                 Last page → tab closes
     <p>Started from <code>/dp/111d6000f90d0b783d8f420784b1</code>. This page only displays applications whose <strong>Target Market</strong> field is empty, so every record needs a decision. Shows two options:</p>
 
     <table>
-      <thead>
-        <tr>
-          <th>Option</th>
-          <th>Button Color</th>
-          <th>Value Set in Caspio</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Option</th><th>Button Color</th><th>Value Set in Caspio</th></tr></thead>
       <tbody>
-        <tr>
-          <td>OK (approved)</td>
-          <td><span class="btn-preview btn-green">Green</span></td>
-          <td><code>OK (approved)</code></td>
-        </tr>
-        <tr>
-          <td>Declined</td>
-          <td><span class="btn-preview btn-red">Red</span></td>
-          <td><code>Declined</code></td>
-        </tr>
+        <tr><td>OK (approved)</td><td><span class="btn-preview btn-green">Green</span></td><td><code>OK (approved)</code></td></tr>
+        <tr><td>Declined</td><td><span class="btn-preview btn-red">Red</span></td><td><code>Declined</code></td></tr>
       </tbody>
     </table>
 
@@ -730,51 +805,55 @@ Submit row N via AJAX                 Last page → tab closes
     <hr>
 
     <!-- ========== TOOLBAR REFERENCE ========== -->
-    <h2 id="toolbar-reference">Toolbar Buttons Reference</h2>
+    <h2 id="toolbar-reference">Toolbar Reference (Vendor Page)</h2>
 
-    <p>The approval toolbar appears at the top of each vendor page during an active review session.</p>
+    <p>The approval toolbar appears at the top of each vendor page during an active review session. The approval buttons vary by DataPage; <strong>Skip</strong> and <strong>Stop</strong> are always present.</p>
+
+    <figure class="shot">
+      <img src="screenshots/toolbar-failed.png" width="1280" alt="Vendor toolbar with a failure indicator">
+      <figcaption>Toolbar with the Caspio indicator showing pending and failed decisions</figcaption>
+    </figure>
 
     <table>
-      <thead>
-        <tr>
-          <th>Button</th>
-          <th>Preview</th>
-          <th>Action</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Button</th><th>Preview</th><th>Action</th></tr></thead>
       <tbody>
-        <tr>
-          <td><strong>Approved without KAM</strong></td>
-          <td><span class="btn-preview btn-green">Approved without KAM</span></td>
-          <td>Submit approval and go to next vendor</td>
-        </tr>
-        <tr>
-          <td><strong>Approved with KAM</strong></td>
-          <td><span class="btn-preview btn-blue">Approved with KAM</span></td>
-          <td>Submit approval and go to next vendor</td>
-        </tr>
-        <tr>
-          <td><strong>Declined</strong></td>
-          <td><span class="btn-preview btn-red">Declined</span></td>
-          <td>Submit decline and go to next vendor</td>
-        </tr>
-        <tr>
-          <td><strong>Skip</strong></td>
-          <td><span class="btn-preview btn-gray">Skip</span></td>
-          <td>Skip this vendor (no action) and go to next</td>
-        </tr>
-        <tr>
-          <td><strong>Stop</strong></td>
-          <td><span class="btn-preview btn-gray">Stop</span></td>
-          <td>End review session; submitted decisions continue processing</td>
-        </tr>
+        <tr><td><strong>Approved without KAM</strong></td><td><span class="btn-preview btn-green">Approved without KAM</span></td><td><em>(Catman Approval page)</em> Save and go to next vendor</td></tr>
+        <tr><td><strong>Approved with KAM</strong></td><td><span class="btn-preview btn-blue">Approved with KAM</span></td><td><em>(Catman Approval page)</em> Save and go to next vendor</td></tr>
+        <tr><td><strong>OK (approved)</strong></td><td><span class="btn-preview btn-green">OK (approved)</span></td><td><em>(Initial Application Sorting page)</em> Save and go to next vendor</td></tr>
+        <tr><td><strong>Declined</strong></td><td><span class="btn-preview btn-red">Declined</span></td><td>Save decline and go to next vendor</td></tr>
+        <tr><td><strong>Skip</strong></td><td><span class="btn-preview btn-gray">Skip</span></td><td>Skip this vendor (logged as Skipped) and go to next</td></tr>
+        <tr><td><strong>Stop</strong></td><td><span class="btn-preview btn-gray">Stop</span></td><td>End review session; decisions already made continue saving</td></tr>
       </tbody>
     </table>
 
-    <div class="screenshot">
-      <!-- Replace with: <img src="screenshots/toolbar-annotated.png" alt="Annotated toolbar"> -->
-      Screenshot: Annotated toolbar with each button labeled
-    </div>
+    <table>
+      <thead><tr><th>Indicator</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>Review 43 / 50:</code></td><td>Position in the review queue</td></tr>
+        <tr><td><em>No duplicates</em> (green tag)</td><td>The record's Duplicates column is empty</td></tr>
+        <tr><td>Amber <strong>Duplicates</strong> banner</td><td>The record has duplicate history (see <a href="#usage-duplicates">Duplicate History</a>)</td></tr>
+        <tr><td><em>Caspio: all saved</em> (gray)</td><td>Every decision so far has been processed</td></tr>
+        <tr><td><em>Caspio: N pending</em> (amber)</td><td>N decisions are still being saved in the background</td></tr>
+        <tr><td><em>&middot; M failed</em> (red)</td><td>M decisions of this session could not be saved &mdash; use <strong>Retry failed</strong> on the Caspio page</td></tr>
+      </tbody>
+    </table>
+
+    <hr>
+
+    <!-- ========== STATUS BAR REFERENCE ========== -->
+    <h2 id="statusbar-reference">Status Bar Reference (Caspio Page)</h2>
+
+    <table>
+      <thead><tr><th>Element</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><strong>&#9203; Saving to Caspio: N pending</strong> (amber)</td><td>Decisions are being saved; keep the tab open. <em>&middot; M failed</em> is appended when some have failed.</td></tr>
+        <tr><td><strong>&#9888; M of N decisions could not be saved to Caspio</strong> (red)</td><td>Saving finished with failures</td></tr>
+        <tr><td><strong>&#10003; All N decisions saved to Caspio</strong> (green)</td><td>Saving finished, everything verified (shown for 30 minutes after the session ends)</td></tr>
+        <tr><td><strong>Retry failed</strong></td><td>Resubmit the failed decisions of the latest session</td></tr>
+        <tr><td><strong>Download log</strong></td><td>Download the review log CSV of the latest session</td></tr>
+        <tr><td><strong>&times;</strong></td><td>Hide the bar for this session</td></tr>
+      </tbody>
+    </table>
 
     <hr>
 
@@ -783,35 +862,65 @@ Submit row N via AJAX                 Last page → tab closes
 
     <div class="ts-item">
       <h3>The toolbar does not appear on the vendor page</h3>
-      <p class="ts-cause"><strong>Cause:</strong> The extension may not be loaded or enabled.</p>
-      <p class="ts-fix"><strong>Fix:</strong> Go to <code>chrome://extensions</code> and verify the extension is enabled (toggle is on). If it shows errors, click <strong>Reload</strong> (circular arrow icon).</p>
-      <div class="screenshot">
-        <!-- Replace with: <img src="screenshots/extension-reload.png" alt="Reload button"> -->
-        Screenshot: Reload button on the extension card
-      </div>
+      <p class="ts-cause"><strong>Cause:</strong> The extension may not be loaded or enabled, or the Caspio page was opened before the extension was (re)loaded.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Go to <code>chrome://extensions</code> and verify the extension is enabled. If it shows errors, click <strong>Reload</strong>. Then refresh the Caspio page and click a vendor link again.</p>
     </div>
 
     <div class="ts-item">
       <h3>The toolbar appears but nothing happens when I click a button</h3>
       <p class="ts-cause"><strong>Cause:</strong> The Caspio tab may have been closed.</p>
-      <p class="ts-fix"><strong>Fix:</strong> Make sure the Caspio data page is still open in another tab. The extension needs it to submit approvals.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Make sure the Caspio data page is still open in another tab. The extension needs it to save approvals.</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>The pending count does not go down</h3>
+      <p class="ts-cause"><strong>Cause:</strong> The Caspio tab was closed, reloaded with a different filter, or is still running an old version of the script.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Switch to the Caspio tab and refresh it (F5) on the same DataPage. Pending decisions resume automatically. Records that are no longer shown on the page cannot be saved and will be marked <strong>Failed</strong> &mdash; see below.</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>Some decisions are marked Failed / Not saved</h3>
+      <p>Open the review log and check the <strong>Error</strong> column. It lists every attempt in order, e.g. <code>AJAX #1: &hellip; | AJAX #2: &hellip; | UI: &hellip;</code> &mdash; the <strong>first</strong> entry is usually the root cause:</p>
+      <table>
+        <thead><tr><th>Error</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><code>Record not found on the current Caspio page &hellip;</code></td><td>The record is no longer in the Caspio table (page reloaded with a different filter, another page of results, or already processed by someone else).</td><td>Show the record on the Caspio page again and click <strong>Retry failed</strong>, or update it manually.</td></tr>
+          <tr><td><code>Value was not saved: Caspio shows "&hellip;" instead of "&hellip;"</code></td><td>Caspio accepted the request but stored a different value.</td><td>Click <strong>Retry failed</strong>. If it repeats, the dropdown options may have changed &mdash; see below.</td></tr>
+          <tr><td><code>no response from Caspio within 30 s</code> / <code>HTTP &hellip;</code></td><td>Network problem or Caspio server issue.</td><td>Check your connection / Caspio login, then click <strong>Retry failed</strong>.</td></tr>
+          <tr><td><code>Caspio did not return this record &hellip; (row position N; Caspio returned record(s) X)</code></td><td>Caspio located a different row than expected &mdash; the table changed on the server since the page was loaded.</td><td>Refresh the Caspio page and click <strong>Retry failed</strong>.</td></tr>
+          <tr><td><code>Caspio inline edit form did not open</code> / <code>Option "&hellip;" could not be selected &hellip;</code></td><td>The UI fallback could not operate the Caspio form (usually after the fast path already failed &mdash; check the earlier entries).</td><td>Refresh the Caspio page and click <strong>Retry failed</strong>; otherwise update the record manually.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ts-item">
+      <h3>The review log was not downloaded</h3>
+      <p class="ts-cause"><strong>Cause:</strong> The Caspio tab was closed before all decisions were processed, or Chrome blocked the download.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Click the extension icon in the Chrome toolbar to download all logs from the last 14 days. Check <code>chrome://downloads</code> if nothing appears.</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>Chrome shows &ldquo;Leave site?&rdquo; when I close or reload the Caspio tab</h3>
+      <p class="ts-cause"><strong>Cause:</strong> Decisions are still waiting to be saved.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Click <strong>Cancel</strong> and wait until the status bar turns green or red. Leaving anyway does not lose the decisions &mdash; they resume the next time you open the same Caspio DataPage &mdash; but they are not saved in the meantime.</p>
     </div>
 
     <div class="ts-item">
       <h3>Caspio shows "Invalid entry in one or more fields"</h3>
       <p class="ts-cause"><strong>Cause:</strong> The dropdown values may have changed in Caspio.</p>
-      <p class="ts-fix"><strong>Fix:</strong> Manually click Edit on any row in Caspio, open the CatmanApproval dropdown, and check that the option values match: <code>Approved without KAM</code>, <code>Approved with KAM</code>, <code>Declined</code>. If they have changed, the extension code needs to be updated.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Manually click Edit on any row in Caspio, open the approval dropdown (CatmanApproval or Target Market), and check that the option values match those listed in <a href="#approval-options">Approval Options</a>. If they have changed, the extension configuration needs to be updated.</p>
+    </div>
+
+    <div class="ts-item">
+      <h3>An approval was saved, but another column looks blank or changed</h3>
+      <p class="ts-cause"><strong>Cause:</strong> The fast path re-submits every editable field. If a DataPage's editable columns changed in Caspio and the extension's field list is out of date, a newly added column may be submitted blank.</p>
+      <p class="ts-fix"><strong>Fix:</strong> Update <code>ajax.editableFields</code> for that DataPage in <code>caspio-content.js</code>, or clear the extension's cached field list so it re-discovers the current fields. After a Caspio schema change, verify one record's other columns are preserved before running a large batch.</p>
     </div>
 
     <div class="ts-item">
       <h3>The extension does not pick up all rows</h3>
       <p class="ts-cause"><strong>Cause:</strong> Only rows visible on the current Caspio page are scanned.</p>
       <p class="ts-fix"><strong>Fix:</strong> Make sure your Caspio page is configured to display all rows (the <code>cbCurrentPageSize</code> parameter should be set high enough, e.g., <code>999</code>).</p>
-    </div>
-
-    <div class="ts-item">
-      <h3>I need to re-review a vendor I skipped</h3>
-      <p class="ts-fix"><strong>Solution:</strong> Skipped vendors are not tracked. Go back to the Caspio page and manually process the skipped row using the standard Edit &rarr; Select &rarr; Update workflow.</p>
     </div>
 
     <div class="ts-item">
@@ -836,28 +945,76 @@ Submit row N via AJAX                 Last page → tab closes
 
     <div class="faq-item">
       <p class="faq-q">Q: What happens if I close the Caspio tab during a review session?</p>
-      <p class="faq-a">A: The review toolbar will still appear on vendor pages, but approval decisions cannot be submitted because the Caspio tab is no longer available. You should keep the Caspio tab open during the entire review session.</p>
+      <p class="faq-a">A: Decisions you make are kept, but they cannot be saved while the Caspio tab is closed. They are saved automatically the next time you open the same Caspio DataPage (as long as the records are shown on it). Keep the Caspio tab open during the session for the best result.</p>
     </div>
 
     <div class="faq-item">
       <p class="faq-q">Q: What happens if I close the vendor tab during a review session?</p>
-      <p class="faq-a">A: The review session ends. Any decisions already submitted will continue to be processed on the Caspio tab. To resume, go back to the Caspio page and click another vendor link.</p>
+      <p class="faq-a">A: The review flow ends. Decisions already made continue to be saved on the Caspio tab. To continue, go back to the Caspio page and click another vendor link. The log of the interrupted session is downloaded when you start the next session, or via the extension icon.</p>
     </div>
 
     <div class="faq-item">
       <p class="faq-q">Q: Can I run multiple review sessions at the same time?</p>
-      <p class="faq-a">A: No. Only one review session can be active at a time. Starting a new session (by clicking a vendor link on Caspio) will replace the current queue.</p>
+      <p class="faq-a">A: No. Only one review session can be active at a time. Starting a new session replaces the current queue &mdash; but decisions from the previous session that were not saved yet are still saved.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: How do I know every decision was really saved?</p>
+      <p class="faq-a">A: Each save is verified against the value Caspio stored. Check the status bar on the Caspio page (green = all saved), the &#10003; / &#10007; marks on the rows, or the <strong>Status</strong> column of the review log.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: Where is the review log stored?</p>
+      <p class="faq-a">A: Log entries are stored locally in Chrome (<code>chrome.storage.local</code>) for 14 days and downloaded to your Downloads folder as CSV. Nothing is uploaded anywhere.</p>
     </div>
 
     <div class="faq-item">
       <p class="faq-q">Q: Does this extension send any data to third-party servers?</p>
-      <p class="faq-a">A: No third parties are involved. Coordination between your tabs uses Chrome's built-in APIs (<code>chrome.storage.local</code> and <code>chrome.runtime.sendMessage</code>). To submit approvals, the extension does make network requests &mdash; but only to <strong>your own Caspio server</strong> (<code>*.caspio.com</code>), and only the same <code>GetRowData</code>/<code>UpdateRow</code> requests the Caspio page itself sends when you edit a row manually. Your existing Caspio login session is used; no credentials are stored or sent elsewhere. Vendor pages (e.g., Amazon) are never contacted by the extension.</p>
+      <p class="faq-a">A: No third parties are involved. Coordination between your tabs uses Chrome's built-in APIs. To save approvals, the extension makes network requests only to <strong>your own Caspio server</strong> (<code>*.caspio.com</code>) &mdash; the same <code>GetRowData</code>/<code>UpdateRow</code> requests the Caspio page itself sends when you edit a row manually. Your existing Caspio login session is used; no credentials are stored or sent elsewhere. Vendor pages (e.g., Amazon) are never contacted by the extension.</p>
+    </div>
+
+    <div class="faq-item">
+      <p class="faq-q">Q: Is the fast submission safe &mdash; can it corrupt my records?</p>
+      <p class="faq-a">A: It is designed to be non-destructive. Before saving, it reads the row's current values and re-sends every editable field unchanged except the one approval field you chose. Fields it cannot confirm from the current row data are left out rather than blanked, and approval writes are idempotent. The one scenario to watch is a DataPage whose editable columns changed after the field list was configured &mdash; see Troubleshooting.</p>
     </div>
 
     <div class="faq-item">
       <p class="faq-q">Q: Does the extension work with other Caspio applications?</p>
-      <p class="faq-a">A: It is configured for two specific DataPages &mdash; <strong>Catman Approval</strong> (<code>CatmanApproval</code> field) and <strong>Initial Application Sorting</strong> (<code>Target Market</code> field) &mdash; both on <code>*.caspio.com</code> domains using the standard inline-edit interface. Other Caspio pages fall back to the Catman Approval behavior. To support a new DataPage with different options or field names, add an entry to <code>DATAPAGE_CONFIGS</code> in <code>caspio-content.js</code>. For the fast AJAX path, each DataPage's editable fields are either preconfigured or auto-discovered from the inline-edit form on first use; if a DataPage's editable columns change in Caspio, update its <code>ajax.editableFields</code> so newly added columns are not left blank.</p>
+      <p class="faq-a">A: It is configured for two DataPages &mdash; <strong>Catman Approval</strong> and <strong>Initial Application Sorting</strong>. Other Caspio pages fall back to the Catman Approval behavior. To support another DataPage, add an entry to <code>DATAPAGE_CONFIGS</code> in <code>caspio-content.js</code> (see the <em>For Developers</em> section of <code>README.md</code>).</p>
     </div>
+
+    <hr>
+
+    <!-- ========== WHAT'S NEW ========== -->
+    <h2 id="whats-new">What's New</h2>
+
+    <h3>v1.5.1</h3>
+    <ul>
+      <li><strong>Multi-line duplicate history.</strong> When a record matches several duplicate types, each type is shown on its own line in the banner (previously the lines ran together). The Russian column name <strong>Дубли: что было раньше</strong> is recognized too.</li>
+      <li><strong>Better failure diagnostics.</strong> The log's <strong>Error</strong> column lists every attempt (<code>AJAX #1: &hellip; | AJAX #2: &hellip; | UI: &hellip;</code>) and which record or message Caspio returned.</li>
+      <li>Updated manual with screenshots, toolbar and status bar references, and troubleshooting by error message.</li>
+    </ul>
+
+    <h3>v1.5.0</h3>
+    <ul>
+      <li><strong>Verified saves</strong> &mdash; a decision only counts as saved when Caspio's stored value matches; previously a save the server did not apply could be lost silently.</li>
+      <li><strong>Automatic retry</strong> and a <strong>Retry failed</strong> button for anything that still fails.</li>
+      <li><strong>Status bar at the top center of the Caspio page</strong> with larger text, plus &#10003; / &#10007; marks on Caspio rows.</li>
+      <li><strong>Review log (CSV)</strong>, downloaded automatically at the end of each session.</li>
+      <li>30-second request timeout and protection of the Caspio tab from automatic discarding.</li>
+    </ul>
+
+    <h3>v1.4.0</h3>
+    <ul>
+      <li>Up to 3 records saved in parallel; no slowdown when the Caspio tab is in the background.</li>
+      <li>Fixed a race that could silently drop decisions when clicking quickly.</li>
+      <li>Pending counter on the vendor toolbar and a warning before closing the Caspio tab.</li>
+    </ul>
+
+    <h3>v1.3.0</h3>
+    <ul>
+      <li>Duplicate history (<em>Duplicates: what happened before</em>) shown on each vendor page.</li>
+    </ul>
 
   </main>
 </div>
