@@ -2,7 +2,7 @@
 
 A Chrome extension that streamlines the Caspio approval workflow. Instead of manually switching between external vendor pages and Caspio to submit each approval, this extension lets you review vendors in a continuous flow — make your decision on the vendor's page, and the extension saves it to Caspio in the background, verifies it, and keeps a downloadable review log.
 
-**Current version: 1.5.1** · A formatted version of this guide is available in [`manual.html`](manual.html).
+**Current version: 1.6.0** · A formatted version of this guide is available in [`manual.html`](manual.html).
 
 ---
 
@@ -125,7 +125,7 @@ In the top-right corner of the extensions page, toggle the **Developer mode** sw
 
 ### Step 5: Verify Installation
 
-After loading, the extension should appear in your extensions list with the name **Caspio Approval Assistant** and version **1.5.1**. Verify that:
+After loading, the extension should appear in your extensions list with the name **Caspio Approval Assistant** and version **1.6.0**. Verify that:
 
 - The extension is shown as enabled (toggle is blue/on)
 - No error messages are displayed
@@ -414,6 +414,7 @@ Open the review log and check the **Error** column. It lists every attempt in or
 
 | Error | Cause | Fix |
 |---|---|---|
+| `blocked by Caspio security check (AWS WAF: …)` | Caspio's firewall token expired (logs from v1.5.1 and earlier show this as `unexpected response from Caspio (not JSON)` followed by `UI: Caspio inline edit form did not open`). | Reload the Caspio page (F5), then click **Retry failed**. From v1.6.0 this is handled automatically. |
 | `Record not found on the current Caspio page …` | The record is no longer in the Caspio table (page reloaded with a different filter, other page of results, or already processed by someone else). | Show the record on the Caspio page again and click **Retry failed**, or update it manually. |
 | `Value was not saved: Caspio shows "…" instead of "…"` | Caspio accepted the request but stored a different value. | Click **Retry failed**. If it repeats, the dropdown options may have changed — see below. |
 | `no response from Caspio within 30 s` / `HTTP …` | Network problem or Caspio server issue. | Check your connection / Caspio login, then click **Retry failed**. |
@@ -527,6 +528,11 @@ Bump `version` in `manifest.json` (and the version shown in `manual.html` / this
 ---
 
 ## Changelog
+
+### v1.6.0
+- **Caspio security check handled.** Caspio sits behind an AWS WAF firewall. When its browser token expires, every save request is answered with an empty `HTTP 202` (`x-amzn-waf-action: challenge`). Earlier versions treated this as a normal error, so every decision after that point failed — including **Retry failed**, because the page was never reloaded. The extension now recognizes the firewall response, passes the check silently in a hidden frame and continues saving.
+- If the check cannot be passed silently, saving **pauses** instead of failing: decisions stay pending and the status bar shows **⚠ Caspio security check required** with **Reload page** and **Try again**. After the reload, pending decisions are saved automatically.
+- No more slow UI fallback while blocked by the firewall (it could not work and cost about 10 s per decision).
 
 ### v1.5.1
 - **Multi-line duplicate history.** A Duplicates cell can list several duplicate types (`PHONE_DUP`, `COMPANY_DUP`, `STORE_DUP`, `WECHAT_DUP`, `BL_DUP`, …), one per line. Line breaks are now preserved and each type is shown on its own line in the banner (previously the lines ran together).

@@ -382,7 +382,7 @@
 
   <!-- ===== Sidebar ===== -->
   <aside class="sidebar">
-    <div class="sidebar-title">Caspio Approval Assistant<br>User Manual<br><span style="font-weight:normal;font-size:0.8em;opacity:0.7;">v1.5.1</span></div>
+    <div class="sidebar-title">Caspio Approval Assistant<br>User Manual<br><span style="font-weight:normal;font-size:0.8em;opacity:0.7;">v1.6.0</span></div>
     <nav>
       <a href="#overview">Overview</a>
       <a href="#installation">Installation</a>
@@ -523,7 +523,7 @@
     </div>
 
     <h3 id="install-step5">Step 5: Verify Installation</h3>
-    <p>After loading, the extension should appear in your extensions list with the name <strong>Caspio Approval Assistant</strong> and version <strong>1.5.1</strong>. Verify that:</p>
+    <p>After loading, the extension should appear in your extensions list with the name <strong>Caspio Approval Assistant</strong> and version <strong>1.6.0</strong>. Verify that:</p>
     <ul>
       <li>The extension is shown as enabled (toggle is blue/on)</li>
       <li>No error messages are displayed</li>
@@ -848,6 +848,8 @@ Review log CSV downloaded</div>
       <tbody>
         <tr><td><strong>&#9203; Saving to Caspio: N pending</strong> (amber)</td><td>Decisions are being saved; keep the tab open. <em>&middot; M failed</em> is appended when some have failed.</td></tr>
         <tr><td><strong>&#9888; M of N decisions could not be saved to Caspio</strong> (red)</td><td>Saving finished with failures</td></tr>
+        <tr><td><strong>&#9888; Caspio security check required &middot; N pending</strong> (red)</td><td>Caspio's firewall asked the browser to verify itself again and it could not be done silently. Saving is paused, nothing is lost &mdash; click <strong>Reload page</strong> (or <strong>Try again</strong>)</td></tr>
+        <tr><td><strong>&#9203; Re-verifying with Caspio&hellip;</strong> (amber)</td><td>The extension is passing Caspio's security check in the background; saving resumes in a few seconds</td></tr>
         <tr><td><strong>&#10003; All N decisions saved to Caspio</strong> (green)</td><td>Saving finished, everything verified (shown for 30 minutes after the session ends)</td></tr>
         <tr><td><strong>Retry failed</strong></td><td>Resubmit the failed decisions of the latest session</td></tr>
         <tr><td><strong>Download log</strong></td><td>Download the review log CSV of the latest session</td></tr>
@@ -884,6 +886,7 @@ Review log CSV downloaded</div>
       <table>
         <thead><tr><th>Error</th><th>Cause</th><th>Fix</th></tr></thead>
         <tbody>
+          <tr><td><code>blocked by Caspio security check (AWS WAF: &hellip;)</code></td><td>Caspio's firewall token expired. Logs from v1.5.1 and earlier show this as <code>unexpected response from Caspio (not JSON)</code> followed by <code>UI: Caspio inline edit form did not open</code>.</td><td>Reload the Caspio page (F5), then click <strong>Retry failed</strong>. From v1.6.0 this is handled automatically.</td></tr>
           <tr><td><code>Record not found on the current Caspio page &hellip;</code></td><td>The record is no longer in the Caspio table (page reloaded with a different filter, another page of results, or already processed by someone else).</td><td>Show the record on the Caspio page again and click <strong>Retry failed</strong>, or update it manually.</td></tr>
           <tr><td><code>Value was not saved: Caspio shows "&hellip;" instead of "&hellip;"</code></td><td>Caspio accepted the request but stored a different value.</td><td>Click <strong>Retry failed</strong>. If it repeats, the dropdown options may have changed &mdash; see below.</td></tr>
           <tr><td><code>no response from Caspio within 30 s</code> / <code>HTTP &hellip;</code></td><td>Network problem or Caspio server issue.</td><td>Check your connection / Caspio login, then click <strong>Retry failed</strong>.</td></tr>
@@ -987,6 +990,13 @@ Review log CSV downloaded</div>
 
     <!-- ========== WHAT'S NEW ========== -->
     <h2 id="whats-new">What's New</h2>
+
+    <h3>v1.6.0</h3>
+    <ul>
+      <li><strong>Caspio security check handled.</strong> When Caspio's firewall (AWS WAF) asks the browser to verify itself again, the extension now passes the check silently and keeps saving. Previously every decision after that point failed, and <strong>Retry failed</strong> did not help until the page was reloaded.</li>
+      <li>If the check cannot be passed silently, saving <strong>pauses</strong> instead of failing: the status bar shows <strong>&#9888; Caspio security check required</strong> with <strong>Reload page</strong> and <strong>Try again</strong>; pending decisions are saved after the reload.</li>
+      <li>No slow UI fallback while the firewall is blocking requests.</li>
+    </ul>
 
     <h3>v1.5.1</h3>
     <ul>

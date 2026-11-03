@@ -480,6 +480,40 @@
    */
   let ajaxCtx = undefined;
 
+  /* ====== AWS WAF 安全质询（v1.6.0） ======
+   *
+   * 背景（2026-11-03 真实故障）：Caspio 的负载均衡前面挂着 AWS WAF。浏览器在整页加载时通过
+   * 质询页获得 aws-waf-token cookie，令牌有有效期；过期（或触发频率规则）后，所有 fetch/XHR
+   * 都会被 WAF 拦截，返回 HTTP 202、空响应体、响应头 x-amzn-waf-action: challenge。
+   * 这种空响应对 XHR 而言无法“解题”，只有一次 text/html 的页面导航才能运行质询脚本、换取新令牌。
+   *
+   * 旧版把它当成普通失败：AJAX 重试一次（同样被拦）→ UI 模拟（Caspio 自己的 GetRowData 也被拦，
+   * 等 10 秒编辑框超时）→ 判定 Failed。结果从令牌过期那一刻起，后面 18 条全部失败，
+   * 用户点 “Retry failed” 也一样（页面没刷新，令牌仍是过期的）。
+   *
+   * 新策略：
+   * 1. postAjax 识别 WAF 响应头，抛出带 wafAction 的错误；
+   * 2. 遇到 challenge 时，用隐藏 iframe 导航到同一 DataPage，让质询脚本在 iframe 里静默运行、
+   *    刷新同域 cookie，然后重试原操作——无需用户干预；
+   * 3. 静默恢复失败（或是需要人工的 captcha、或恢复后很快又被拦）时，暂停队列：操作保留在待提交
+   *    队列中、不判定 Failed，状态条提示用户刷新页面；刷新后页面导航会完成质询，队列自动续传。
+   */
+
+  /** true 表示静默恢复已失败，队列暂停，等待用户刷新页面（或点 Try again）。 */
+  let wafBlocked = false;
+
+  /** 进行中的静默恢复（单飞：并发的多条操作同时遇到质询时共享同一次恢复）。 */
+  let wafRecovery = null;
+
+  /** 上次静默恢复完成的时间戳；用于冷却，防止“恢复 → 又被拦 → 再恢复”的死循环。 */
+  let wafLastRecoveryAt = 0;
+
+  /** 冷却时间：恢复后 60 秒内再次被拦，说明静默恢复无效，转为提示用户刷新。 */
+  const WAF_RECOVERY_COOLDOWN_MS = 60 * 1000;
+
+  /** 隐藏 iframe 完成质询的超时；质询通常 1~3 秒，25 秒足够宽松。 */
+  const WAF_IFRAME_TIMEOUT_MS = 25 * 1000;
+
   /** 正在提交中的操作：键 → recordId。用于控制并发数，并保证同一记录的操作不会同时提交。 */
   const inFlight = new Map();
 
@@ -660,6 +694,10 @@
           break;
         }
 
+        /* WAF 拦截中：不再启动新提交（每次请求都只会再被拦一次，且可能延长频率规则的封禁），
+         * 操作留在队列里，等用户刷新页面或点 Try again */
+        if (wafBlocked) break;
+
         const cfg = getCurrentConfig();
         const ajaxCfg = getAjaxConfig(cfg);
         if (ajaxCfg && ajaxCtx === undefined) {
@@ -716,6 +754,8 @@
     const errors = [];
     let result = null;
     let method = "";
+    /* true 表示被 WAF 拦截且静默恢复失败：本条不判定失败，留在队列里等页面刷新后续传 */
+    let wafHold = false;
 
     try {
       /* ---- 档位 2：AJAX 直连（必要时串行重试一次） ---- */
@@ -731,7 +771,24 @@
             ajaxDegraded = true;
             console.warn("[Caspio Assistant][AJAX] 出现失败，本页面后续改为串行提交");
           }
+          if (result.waf) {
+            /* WAF 质询：重试和 UI 回退都会被同样拦截（Caspio 自身请求也走同一个 WAF），
+             * 所以先刷新令牌；成功则进入下一轮重试，失败则暂停 */
+            if (!(await recoverFromWaf(result.waf))) { wafHold = true; break; }
+          }
         }
+      }
+
+      /* ---- WAF 暂停：保留操作键，不走 UI、不判定 Failed ---- */
+      if (wafHold) {
+        await updateLog(op.logKey, {
+          status: "Pending",
+          method,
+          addAttempts: attempts,
+          error: "Paused by Caspio security check; will resume after the Caspio page is reloaded. " + errors.join(" | ")
+        });
+        console.warn(`[Caspio Assistant][WAF] recordId=${op.recordId} 已暂停，等待页面刷新后续传`);
+        return;
       }
 
       /* ---- 档位 1：UI 模拟；用互斥锁保证同一时刻只有一条在操作 DOM ---- */
@@ -781,6 +838,135 @@
     const run = uiLock.then(fn, fn);
     uiLock = run.catch(() => {});
     return run;
+  }
+
+  /* ====== AWS WAF 质询恢复 ====== */
+
+  /**
+   * 遇到 WAF 拦截时尝试静默恢复（刷新 aws-waf-token）。
+   *
+   * 单飞：多条并发提交同时被拦时，只启动一次 iframe 恢复，其余等待同一结果。
+   * 以下情况不尝试静默恢复，直接暂停队列并提示用户刷新页面：
+   * - 已处于暂停状态；
+   * - 动作不是 challenge（如 captcha 需要人工答题，隐藏 iframe 解不了）；
+   * - 距上次恢复不足冷却时间（说明恢复无效，继续尝试只会死循环）。
+   *
+   * @param {string} action - x-amzn-waf-action 响应头的值（challenge / captcha / …）
+   * @returns {Promise<boolean>} true=令牌已刷新，可重试；false=已暂停队列
+   */
+  async function recoverFromWaf(action) {
+    if (wafBlocked) return false;
+    if (wafRecovery) return wafRecovery;
+    if (String(action).toLowerCase() !== "challenge" || Date.now() - wafLastRecoveryAt < WAF_RECOVERY_COOLDOWN_MS) {
+      blockForWaf(action);
+      return false;
+    }
+    wafRecovery = (async () => {
+      console.warn(`[Caspio Assistant][WAF] 请求被 AWS WAF 质询 (${action})，尝试用隐藏 iframe 静默刷新令牌…`);
+      refreshStatusBar();
+      const endpoint = (ajaxCtx && ajaxCtx.endpoint) || location.href.split("#")[0];
+      const ok = await solveWafChallengeInIframe(endpoint);
+      wafLastRecoveryAt = Date.now();
+      if (ok) console.log("[Caspio Assistant][WAF] ✅ 质询已通过，继续提交");
+      else blockForWaf(action);
+      return ok;
+    })().finally(() => {
+      wafRecovery = null;
+      refreshStatusBar();
+    });
+    return wafRecovery;
+  }
+
+  /**
+   * 进入 WAF 暂停状态：调度器停止启动新提交，状态条提示用户刷新页面。
+   * @param {string} action - WAF 动作，仅用于日志
+   */
+  function blockForWaf(action) {
+    if (wafBlocked) return;
+    wafBlocked = true;
+    console.warn(`[Caspio Assistant][WAF] 静默恢复不可用 (${action})，已暂停提交队列，等待用户刷新页面`);
+    refreshStatusBar();
+  }
+
+  /**
+   * 解除暂停并立即重试（状态条 “Try again” 按钮）。
+   * 清除冷却，使下一次遇到质询时可以再做一次静默恢复。
+   */
+  function resumeAfterWaf() {
+    wafBlocked = false;
+    wafLastRecoveryAt = 0;
+    processQueue();
+  }
+
+  /**
+   * 读取 aws-waf-token cookie 的当前值（该 cookie 由质询脚本通过 JS 写入，通常可读）。
+   * @returns {string} 不存在或不可读时返回空串
+   */
+  function readWafTokenCookie() {
+    const m = document.cookie.match(/(?:^|;\s*)aws-waf-token=([^;]*)/);
+    return m ? m[1] : "";
+  }
+
+  /**
+   * 在隐藏的同源 iframe 中导航到 DataPage，让 AWS WAF 的质询页运行并刷新同域 cookie。
+   *
+   * 原理：WAF 对 fetch 只返回空的 202；而对 Accept: text/html 的页面导航会返回质询页，
+   * 质询脚本（静默计算，无需用户操作）完成后写入新的 aws-waf-token 并重新加载页面。
+   * iframe 与本页同源，cookie 共享，质询通过后本页的 fetch 即可恢复。
+   * 本扩展的内容脚本未开启 all_frames，不会注入到该 iframe 中，不会产生第二个提交队列。
+   *
+   * 成功判定（任一满足）：
+   * - aws-waf-token cookie 的值发生了变化；
+   * - iframe 加载完成且页面中不含质询脚本特征（说明已拿到真实 DataPage）。
+   * 判定为成功后立即移除 iframe（同时停止其中 Caspio 页面的脚本）。
+   * 若质询页特征识别不准而提前判定成功，调用方的重试会再次被拦，冷却机制会转为提示用户刷新。
+   *
+   * @param {string} url - 要导航的 DataPage 地址
+   * @returns {Promise<boolean>} 是否在超时前完成质询
+   */
+  function solveWafChallengeInIframe(url) {
+    return new Promise((resolve) => {
+      const tokenBefore = readWafTokenCookie();
+      const iframe = document.createElement("iframe");
+      /* 不用 display:none / visibility:hidden：部分质询脚本在不可见文档中可能不运行，故放到视口外 */
+      iframe.style.cssText = "position:fixed;left:-10000px;top:-10000px;width:400px;height:300px;border:0;opacity:0;pointer-events:none;";
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.tabIndex = -1;
+
+      let done = false;
+      const finish = (ok) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        clearInterval(poll);
+        iframe.remove();
+        resolve(ok);
+      };
+      const tokenChanged = () => {
+        const now = readWafTokenCookie();
+        return !!now && now !== tokenBefore;
+      };
+      const timer = setTimeout(() => finish(tokenChanged()), WAF_IFRAME_TIMEOUT_MS);
+      /* cookie 可能在质询页重载前就已写入，轮询它比只等 load 事件更快 */
+      const poll = setInterval(() => { if (tokenChanged()) finish(true); }, 500);
+
+      iframe.addEventListener("load", () => {
+        if (tokenChanged()) { finish(true); return; }
+        let html = "";
+        try {
+          html = iframe.contentDocument && iframe.contentDocument.documentElement
+            ? iframe.contentDocument.documentElement.innerHTML : "";
+        } catch (e) {
+          return; /* 读不到文档（理论上同源不会发生），等 cookie 变化或超时 */
+        }
+        if (!html) return;
+        /* 仍是质询页：等它的脚本跑完后自动重载 */
+        if (/AwsWafIntegration|awswaf|challenge\.js|captcha\.js/i.test(html)) return;
+        finish(true);
+      });
+      iframe.src = url;
+      document.body.appendChild(iframe);
+    });
   }
 
   /* ====== Caspio 表格行标记 ====== */
@@ -906,7 +1092,9 @@
   function renderStatusBar(s) {
     const recentlyEnded = !s.ended || (Date.now() - (s.ended.endedAt || 0) < 30 * 60 * 1000);
     let mode = null;
-    if (s.pending > 0) mode = "busy";
+    /* WAF 暂停优先级最高：有积压且队列已暂停时，必须让用户知道“需要刷新页面”，否则会一直等下去 */
+    if (s.pending > 0 && wafBlocked) mode = "blocked";
+    else if (s.pending > 0) mode = "busy";
     else if (s.sessionId && getDismissedSession() !== s.sessionId) {
       if (s.stats.failed > 0) mode = "failed";
       else if (s.stats.saved > 0 && recentlyEnded) mode = "done";
@@ -924,12 +1112,20 @@
       bar.setAttribute("role", "status");
       document.body.appendChild(bar);
     }
-    bar.className = "cas-" + mode;
+    /* blocked 复用红色样式 */
+    bar.className = "cas-" + (mode === "blocked" ? "failed" : mode);
     bar.textContent = "";
 
     const text = document.createElement("span");
     text.className = "cas-text";
-    if (mode === "busy") {
+    if (mode === "blocked") {
+      text.textContent = `⚠ Caspio security check required · ${s.pending} pending`;
+      bar.title = "Caspio's firewall asked this browser to verify itself again, so saving is paused. " +
+        "Reload the page to continue. Your pending decisions are kept and will be saved after the reload.";
+    } else if (mode === "busy" && wafRecovery) {
+      text.textContent = `⏳ Re-verifying with Caspio… ${s.pending} pending`;
+      bar.title = "Caspio's firewall asked this browser to verify itself again. This usually takes a few seconds.";
+    } else if (mode === "busy") {
       text.textContent = `⏳ Saving to Caspio: ${s.pending} pending` + (s.stats.failed ? ` · ${s.stats.failed} failed` : "");
       bar.title = "Approval decisions waiting to be saved to Caspio. Keep this tab open until all are saved.";
     } else if (mode === "failed") {
@@ -941,6 +1137,14 @@
     }
     bar.appendChild(text);
 
+    if (mode === "blocked") {
+      bar.appendChild(makeBarButton("Reload page", "Reload this Caspio page to pass the security check and continue saving", () => {
+        /* 待提交操作已持久化在 storage 中，刷新安全；置位以免 beforeunload 弹出“离开此网站？” */
+        expectingReload = true;
+        location.reload();
+      }));
+      bar.appendChild(makeBarButton("Try again", "Retry without reloading the page", resumeAfterWaf));
+    }
     if (mode === "failed") {
       bar.appendChild(makeBarButton("Retry failed", "Submit the failed decisions again", () => retryFailed(s.sessionId)));
     }
@@ -949,7 +1153,8 @@
         safeSendMessage({ action: "exportReviewLog", sessionId: s.sessionId });
       }));
     }
-    if (mode !== "busy") {
+    /* busy / blocked 不可关闭：blocked 需要用户处理，关闭后积压的审批会一直不提交 */
+    if (mode === "failed" || mode === "done") {
       const close = makeBarButton("×", "Dismiss", () => {
         setDismissedSession(s.sessionId);
         bar.remove();
@@ -1255,8 +1460,10 @@
      * @param {Object} ctx - extractPageContext 得到的上下文（只读，可在并发提交间共享）
      * @param {{approvalField:string, editableFields:string[]}} ajaxCfg - 生效的 AJAX 元数据
      * @param {{recordId:string, choice:string}} op - 操作
-     * @returns {Promise<{ok:true, savedValue:string, company:string}|{ok:false, reason:string}>}
-     *   成功时带回服务器上的审批值与公司名（供审核日志使用）；失败时带英文原因（写入日志 CSV）
+     * @returns {Promise<{ok:true, savedValue:string, company:string}|{ok:false, reason:string, waf?:string|null}>}
+     *   成功时带回服务器上的审批值与公司名（供审核日志使用）；失败时带英文原因（写入日志 CSV），
+     *   若失败是 AWS WAF 拦截所致，waf 为 x-amzn-waf-action 的值（如 "challenge"），供调用方走恢复流程。
+     *   注意：UpdateRow 被 WAF 拦截时请求未到达 Caspio 源站，不存在“已保存但未确认”的情况。
      */
     async submit(ctx, ajaxCfg, op) {
       const recordIndex = computeRecordIndex(op.recordId);
@@ -1269,7 +1476,7 @@
       try {
         ({ row: rowData, json: readJson } = await this.getRowData(ctx, op.recordId, recordIndex));
       } catch (e) {
-        return { ok: false, reason: `Reading the record failed (row position ${recordIndex}): ${e.message}` };
+        return { ok: false, waf: e.wafAction || null, reason: `Reading the record failed (row position ${recordIndex}): ${e.message}` };
       }
       if (!rowData) {
         return { ok: false, reason: `Caspio did not return this record when reading it (row position ${recordIndex}; ${describeResponse(readJson)})` };
@@ -1280,7 +1487,7 @@
       try {
         json = await this.updateRow(ctx, ajaxCfg, op, recordIndex, rowData);
       } catch (e) {
-        return { ok: false, reason: "Saving failed: " + e.message };
+        return { ok: false, waf: e.wafAction || null, reason: "Saving failed: " + e.message };
       }
 
       /* 3) 核对：优先用 UpdateRow 响应里的行数据；没有时用 GetRowData 回读 */
@@ -1289,7 +1496,7 @@
         try {
           saved = (await this.getRowData(ctx, op.recordId, recordIndex)).row;
         } catch (e) {
-          return { ok: false, reason: `Could not read the record back after saving (row position ${recordIndex}): ${e.message}` };
+          return { ok: false, waf: e.wafAction || null, reason: `Could not read the record back after saving (row position ${recordIndex}): ${e.message}` };
         }
       }
       if (!saved) {
@@ -1420,12 +1627,21 @@
           headers: { "X-Requested-With": "XMLHttpRequest" },
           signal: controller.signal
         });
+        /* AWS WAF 拦截：HTTP 202 + 空响应体 + x-amzn-waf-action 头（同源请求可直接读取该头）。
+         * 必须在 resp.ok 判断之前识别——202 属于 2xx，否则会落到“不是 JSON”的笼统错误里。 */
+        const wafAction = resp.headers.get("x-amzn-waf-action");
+        if (wafAction) {
+          const err = new Error(`blocked by Caspio security check (AWS WAF: ${wafAction})`);
+          err.wafAction = wafAction;
+          throw err;
+        }
         if (!resp.ok) {
           console.warn("[Caspio Assistant][AJAX] HTTP 非 200:", resp.status);
           throw new Error("HTTP " + resp.status);
         }
         text = (await resp.text()).trim();
       } catch (e) {
+        if (e && e.wafAction) throw e; /* 保留 wafAction 标记，供上层识别 */
         if (e && e.name === "AbortError") throw new Error(`no response from Caspio within ${AJAX_TIMEOUT_MS / 1000} s`);
         throw new Error(e && e.message ? e.message : String(e));
       } finally {
